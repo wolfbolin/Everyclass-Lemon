@@ -10,6 +10,7 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 
 $app->get('/solution', function (Request $request, Response $response) {
+    // 获取请求数据
     $num = $request->getQueryParams()['num'];
     if (isset($num) && $num > 10) {
         $num = 10;
@@ -17,6 +18,7 @@ $app->get('/solution', function (Request $request, Response $response) {
         $num = 1;
     }
 
+    // 更新MongoDB数据库
     $collection = $this->get('mongodb')->selectCollection('solution');
     $select_result = $collection->find(
         ['$expr' => ['$gt' => ['$target', '$success']]],
@@ -27,20 +29,24 @@ $app->get('/solution', function (Request $request, Response $response) {
     );
     $select_result = (array)$select_result->toArray();
 
+    // 将字典数据写入请求响应
     return $response->withJson($select_result);
 });
 
 $app->post('/solution', function (Request $request, Response $response) {
+    // 获取请求数据
+    $json_data = json_decode($request->getBody(), true);
     $new_solution = [
-        "cid" => "5c7d74159eb5ef1e100011b4",
-        "mid" => "5c7d5e749eb5ef1e100011b2",
-        "code" => "200",
-        "data" => "HTML doc",
-        "time" => "2019-3-5 12:00",
-        "user_ip" => "114.114.114.114",
-        "user_ua" => "Go client(123456789)"
+        "cid" => $json_data['cid'],
+        "mid" => $json_data['mid'],
+        "code" => $json_data['code'],
+        "data" => $json_data['data'],
+        "time" => $json_data['time'],
+        "user_ip" => $json_data['user_ip'],
+        "user_ua" => $json_data['user_ua']
     ];
 
+    // 更新MongoDB数据库
     $collection = $this->get('mongodb')->selectCollection('mission');
     $insert_result = $collection->insertOne($new_solution);
     $insert_result = (array)$insert_result->getInsertedId();

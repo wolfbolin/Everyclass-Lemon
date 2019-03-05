@@ -22,6 +22,10 @@ $app->get('/statistic/mongodb', function () {
     var_dump($insertOneResult);
 });
 
-
+$app->get('/404', function () {
+    $response = new \Slim\Http\Response(404);
+    $not_found = ["status" => "404 not found."];
+    return $response->withJson($not_found);
+});
 
 

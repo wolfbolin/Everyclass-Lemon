@@ -10,9 +10,11 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 
 $app->get('/mission', function (Request $request, Response $response) {
+    // 获取请求数据
     $mongo_id = $request->getQueryParams()['_id'];
     $mongo_id = new MongoDB\BSON\ObjectId($mongo_id);
 
+    // 更新MongoDB数据库
     $collection = $this->get('mongodb')->selectCollection('mission');
     $select_result = $collection->findOne(['_id' => $mongo_id]);
     $select_result = (array)$select_result->getArrayCopy();
@@ -23,6 +25,7 @@ $app->get('/mission', function (Request $request, Response $response) {
 });
 
 $app->post('/mission', function (Request $request, Response $response) {
+    // 获取请求数据
     $json_data = json_decode($request->getBody(), true);
     $new_mission = [
         'method' => strtoupper($json_data['method']),
@@ -38,6 +41,7 @@ $app->post('/mission', function (Request $request, Response $response) {
         'error' => 0
     ];
 
+    // 更新MongoDB数据库
     $collection = $this->get('mongodb')->selectCollection('mission');
     $insert_result = $collection->insertOne($new_mission);
     $insert_result = (array)$insert_result->getInsertedId();
@@ -49,6 +53,7 @@ $app->post('/mission', function (Request $request, Response $response) {
 });
 
 $app->put('/mission', function (Request $request, Response $response) {
+    // 获取请求数据
     $json_data = json_decode($request->getBody(), true);
     $new_mission = [
         'method' => $json_data['method'],
@@ -64,6 +69,7 @@ $app->put('/mission', function (Request $request, Response $response) {
         'error' => $json_data['error']
     ];
 
+    // 更新MongoDB数据库
     $collection = $this->get('mongodb')->selectCollection('mission');
     $update_result = $collection->updateOne(
         ['_id' => $request->getQueryParams()['_id']],

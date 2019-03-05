@@ -2,7 +2,7 @@
 
 
 
-## 任务上传
+## 任务数据
 
 * 路径前缀：`/mission`
 * 验证方式：参数加密
@@ -121,19 +121,36 @@
 
    
 
-## 方案获取
+## 回执数据
 
-### 获取单个方案
+### 获取单个任务
 
-* URL路径：`/solution`
+* URL路径：`/receipt`
 
 * 连接方式：GET
+
+* 相关说明：
+
+  * 参数说明
+
+    | 参数名 | 参数含义             |
+    | ------ | -------------------- |
+    | rid    | 任务编号             |
+    | cid    | cookie编号           |
+    | method | 请求方法             |
+    | host   | 主机地址             |
+    | path   | 访问路径             |
+    | header | 请求头（字典形式）   |
+    | param  | 访问参数（URL参数）  |
+    | data   | 正文数据（文本形式） |
+    | cookie | 访问cookie           |
 
 * 响应数据：
 
   ```json
     {
-      "mid": "5c7d5e749eb5ef1e100011b2",
+      "rid": "5c7d5e749eb5ef1e100011b2",
+      "cid": "5c7d74159eb5ef1e100011b4",
       "method": "GET",
       "host": "baidux.tinoy.xyz",
       "path": "/index.html",
@@ -146,24 +163,62 @@
   }
   ```
 
-### 上传单个方案
+### 获取多个任务
 
-- URL路径：`/solution`
+* URL路径：`/receipt?num=5`
+
+* 连接方式：GET
+
+* 相关说明：
+
+  * num限定了获取的方案的数量，最大值为10，超过10的值将按照异常访问处理。
+  * 响应数据为json数组形式，数组中每个对象为单个任务
+
+* 响应数据：
+
+  ```json
+  [
+      {},
+      {},
+      {}
+  ]
+  ```
+
+  
+
+### 上传单个回执
+
+- URL路径：`/receipt`
 
 - 连接方式：POST
+
+- 相关说明：
+
+  请逐个上传回执信息，若上传失败请重试
+
+  | 参数名 | 参数含义                     |
+  | ------ | ---------------------------- |
+  | status | 任务执行结果(success\|error) |
+  | rid    | 任务编号                     |
+  | cid    | cookie编号                   |
+  | code   | http响应码                   |
+  | data   | http响应正文                 |
+  | time   | http响应时间                 |
+  | user   | 用户平台与编号               |
+
+  
 
 - 发送数据：
 
   ```json
   {
       "status": "success|error",
+      "rid": "5c7d5e749eb5ef1e100011b2",
       "cid": "5c7d74159eb5ef1e100011b4",
-      "mid": "5c7d5e749eb5ef1e100011b2",
       "code": "200",
       "data": "HTML doc",
       "time": "2019-3-5 12:00",
-      "user_ip": "114.114.114.114",
-      "user_ua": "Go client(123456789)"
+      "user": "Go client(123456789)"
   }
   ```
 
