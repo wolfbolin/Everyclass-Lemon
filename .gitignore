@@ -1,0 +1,8 @@
+# For wolfbolin
+.idea
+server/src/config.php
+
+
+# For Laravel
+vendor/
+node_modules/
