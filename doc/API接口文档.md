@@ -1,6 +1,25 @@
 #  Lemon_Tree 服务接口
 
+## 数据字典
 
+在完成数据交互时采用以下字段表示数据内容
+
+| 名称   | 含义                 | 类型 |
+| ------ | -------------------- | ------ |
+| mid   | 任务编号             | string |
+| cid    | cookie编号           | string |
+|rid|回执编号| string |
+| method | HTTP请求方法         | string |
+| host   | HTTP请求主机地址       | string |
+| path   | HTTP请求路径       | string |
+| header | HTTP请求头 | map |
+| param  | HTTP请求参数（URL参数） | map |
+| data   | HTTP请求/响应正文 | string |
+| cookie | HTTP请求cookie信息（可能会产生cookie重复问题） | string |
+| status | 命令执行结果(success\|error)   | string |
+| code   | HTTP请求状态码       | int |
+| time   | HTTP请求响应时间（Unix时间戳） | int |
+| user   | 用户平台与编号（形如“Go client(0123456789)”） | string |
 
 ## 任务数据
 
@@ -129,22 +148,6 @@
 
 * 连接方式：GET
 
-* 相关说明：
-
-  * 参数说明
-
-    | 参数名 | 参数含义             |
-    | ------ | -------------------- |
-    | rid    | 任务编号             |
-    | cid    | cookie编号           |
-    | method | 请求方法             |
-    | host   | 主机地址             |
-    | path   | 访问路径             |
-    | header | 请求头（字典形式）   |
-    | param  | 访问参数（URL参数）  |
-    | data   | 正文数据（文本形式） |
-    | cookie | 访问cookie           |
-
 * 响应数据：
 
   ```json
@@ -154,7 +157,7 @@
       "method": "GET",
       "host": "baidux.tinoy.xyz",
       "path": "/index.html",
-      "header": "",
+      "header": {},
       "param": {
           "q": "wolfbolin"
       },
@@ -196,17 +199,7 @@
 
   请逐个上传回执信息，若上传失败请重试
 
-  | 参数名 | 参数含义                         |
-  | ------ | -------------------------------- |
-  | status | 任务执行结果(success\|error)     |
-  | mid    | 任务编号                         |
-  | cid    | cookie编号                       |
-  | code   | http响应码（整型）               |
-  | data   | http响应正文                     |
-  | time   | http响应时间（整型，Unix时间戳） |
-  | user   | 用户平台与编号                   |
 
-  
 
 - 发送数据：
 

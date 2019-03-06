@@ -15,16 +15,14 @@ $app->get('/receipt', function (Request $request, Response $response) {
     if (empty($num)) {
         $num = 1;
     } elseif ($num < 2 || $num > 10) {
-        $error_info = [
-            "status" => "error",
-            "info" => "访问参数异常"
-        ];
-        return $response->withStatus(403)->withJson($error_info);
+        goto bad_request;
     }
 
-    // 更新MongoDB数据库
-    $mission_col = $this->get('mongodb')->selectCollection('mission');
-    $select_result = $mission_col->find(
+    // 搜索MongoDB数据库
+    $db = $this->get('mongodb');
+    // 获取任务数据
+    $collection = $db->selectCollection('mission');
+    $select_result = $collection->find(
         ['$expr' => ['$gt' => ['$target', '$success']]],
         [
             'sort' => ['success' => 1, 'target' => -1, 'download' => 1],
@@ -35,15 +33,45 @@ $app->get('/receipt', function (Request $request, Response $response) {
     foreach ($select_result as &$mission) {
         $mission['mid'] = ((array)$mission['_id'])['oid'];
         unset($mission['_id']);
-        $mission_col->updateOne(
+        $collection->updateOne(
             ['_id' => (new MongoDB\BSON\ObjectId($mission['mid']))],
             ['$inc' => ['download' => 1]]
         );
+    }
+    $mission_list = $select_result;
 
+    // 获取cookie数据
+    $collection = $db->selectCollection('cookie');
+    $select_result = $collection->findOne([],
+        [
+            'projection' => [
+                '_id' => 1,
+                'cookie' => 1
+            ],
+            'sort' => ['download' => 1],
+            'limit' => 1
+        ]
+    );
+    $select_result = (array)$select_result->getArrayCopy();
+    foreach ($mission_list as &$mission) {
+        $mission['cid'] = ((array)$select_result['_id'])['oid'];
+        $mission['cookie'] = $select_result['cookie'];
+        $collection->updateOne(
+            ['_id' => (new MongoDB\BSON\ObjectId($mission['cid']))],
+            ['$inc' => ['download' => 1]]
+        );
     }
 
+
     // 将字典数据写入请求响应
-    return $response->withJson($select_result);
+    return $response->withJson($mission_list);
+    // 异常访问出口
+    bad_request:
+    $error_info = [
+        "status" => "error",
+        "info" => "访问参数异常"
+    ];
+    return $response->withStatus(403)->withJson($error_info);
 });
 
 $app->post('/receipt', function (Request $request, Response $response) {
@@ -53,11 +81,7 @@ $app->post('/receipt', function (Request $request, Response $response) {
     $new_receipt = [];
     foreach ($receipt as $key => $value) {
         if (!isset($json_data[$key]) || gettype($json_data[$key]) != gettype($value)) {
-            $error_info = [
-                "status" => "error",
-                "info" => "访问参数异常"
-            ];
-            return $response->withStatus(403)->withJson($error_info);
+            goto bad_request;
         }
         $new_receipt[$key] = $value;
     }
@@ -66,21 +90,50 @@ $app->post('/receipt', function (Request $request, Response $response) {
 
     // 更新MongoDB数据库
     $db = $this->get('mongodb');
-    $receipt_co = $db->selectCollection('receipt');
-    $insert_result = $receipt_co->insertOne($receipt);
+    // 写入回执信息
+    $collection = $db->selectCollection('receipt');
+    $insert_result = $collection->insertOne($receipt);
     $insert_result = (array)$insert_result->getInsertedId();
     $insert_result['_id'] = $insert_result['oid'];
+    $result = $insert_result;
+    unset($insert_result['oid'], $insert_result);
 
-    $mission_co = $db->selectCollection('mission');
-    $update_result = $mission_co->updateOne(
+    // 更新任务信息
+    $collection = $db->selectCollection('mission');
+    $status = $receipt['status'];
+    if ($status != 'success' && $status != 'error') {
+        goto bad_request;
+    }
+    $update_result = $collection->updateOne(
         ['_id' => (new MongoDB\BSON\ObjectId($receipt['mid']))],
-        
+        ['$inc' => ['upload' => 1, "$status" => 1]]
     );
+    $update_result = [
+        "mid" => $receipt['mid'],
+        "mission_modified_count" => $update_result->getModifiedCount()
+    ];
+    $result [] = $update_result;
 
-
-    unset($insert_result['oid']);
+    // 更新cookie信息
+    $collection = $db->selectCollection('cookie');
+    $update_result = $collection->updateOne(
+        ['_id' => (new MongoDB\BSON\ObjectId($receipt['cid']))],
+        ['$inc' => ["$status" => 1]]
+    );
+    $update_result = [
+        "cid" => $receipt['cid'],
+        "cookie_modified_count" => $update_result->getModifiedCount()
+    ];
+    $result [] = $update_result;
 
     // 将字典数据写入请求响应
-    return $response->withJson($insert_result);
+    return $response->withJson($result);
+    // 异常访问出口
+    bad_request:
+    $error_info = [
+        "status" => "error",
+        "info" => "访问参数异常"
+    ];
+    return $response->withStatus(403)->withJson($error_info);
 });
 
