@@ -31,8 +31,8 @@ $app->post('/mission', function (Request $request, Response $response) {
         'method' => strtoupper($json_data['method']),
         'host' => $json_data['host'],
         'path' => $json_data['path'],
-        'header' => $json_data['header'],
-        'param' => $json_data['param'],
+        'header' => (array)$json_data['header'],
+        'param' => (array)$json_data['param'],
         'data' => $json_data['data'],
         'download' => 0,
         'upload' => 0,
@@ -72,7 +72,7 @@ $app->put('/mission', function (Request $request, Response $response) {
     // 更新MongoDB数据库
     $collection = $this->get('mongodb')->selectCollection('mission');
     $update_result = $collection->updateOne(
-        ['_id' => $request->getQueryParams()['_id']],
+        ['_id' => (new MongoDB\BSON\ObjectId($request->getQueryParams()['_id']))],
         ['$set' => $new_mission]
     );
     $update_result = [

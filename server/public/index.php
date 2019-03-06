@@ -27,7 +27,7 @@ require __DIR__ . '/../src/container.php';
 // Register routes
 require __DIR__ . '/../src/route/statistic.php';
 require __DIR__ . '/../src/route/mission.php';
-require __DIR__ . '/../src/route/solution.php';
+require __DIR__ . '/../src/route/receipt.php';
 
 // Run app
 try {
