@@ -236,14 +236,14 @@
 | cookie             | HTTP请求cookie信息（可能会产生cookie重复问题） | string |
 | status             | 命令执行结果(success\|error)                   | string |
 | code               | HTTP请求状态码                                 | int    |
-| time               | HTTP请求响应时间（Unix时间戳）/Cookie更新时间  | int    |
+| time               | HTTP请求响应时间/Cookie更新时间（Unix时间戳）  | int    |
 | user               | 用户平台与编号（形如“Go client(0123456789)”）  | string |
 | download           | 数据下发次数                                   | int    |
 | upload             | 数据回传次数                                   | int    |
 | success            | 任务完成次数                                   | int    |
 | error              | 任务失败次数                                   | int    |
 | xxx_modified_count | xxx项目文档更新数量                            | int    |
-|                    |                                                |        |
+| xxx_deleted_count  | xxx项目文档删除数量                            | int    |
 
 
 

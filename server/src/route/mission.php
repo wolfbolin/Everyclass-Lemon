@@ -9,16 +9,19 @@
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-require_once __DIR__ . '/../util/http_respose.php';
 
 $app->get('/mission', function (Request $request, Response $response) {
     // 获取请求数据
     try {
         $mission_id = $request->getQueryParams()['_id'];
+        if (empty($mission_id)) {
+            goto Not_found;
+        }
         $mission_id = new MongoDB\BSON\ObjectId($mission_id);
     } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
         goto Bad_request;
     }
+
 
     // 更新MongoDB数据库
     $mongodb = $this->get('mongodb');
@@ -30,6 +33,7 @@ $app->get('/mission', function (Request $request, Response $response) {
     $select_result = (array)$select_result->getArrayCopy();
     $select_result['_id'] = ((array)$select_result['_id'])['oid'];
 
+
     // 将字典数据写入请求响应
     return $response->withJson($select_result);
     // 异常访问出口
@@ -38,6 +42,7 @@ $app->get('/mission', function (Request $request, Response $response) {
     Not_found:
     return \WolfBolin\Slim\HTTP\Not_found($response);
 });
+
 
 $app->post('/mission', function (Request $request, Response $response) {
     // 获取请求数据
@@ -54,8 +59,11 @@ $app->post('/mission', function (Request $request, Response $response) {
         }
         $new_mission[$key] = $json_data[$key];
     }
+    $new_mission['header'] = (object)$new_mission['header'];
+    $new_mission['param'] = (object)$new_mission['param'];
     $mission = $new_mission;
     unset($new_mission);
+
 
     // 更新MongoDB数据库
     $mongodb = $this->get('mongodb');
@@ -65,12 +73,14 @@ $app->post('/mission', function (Request $request, Response $response) {
     $insert_result['_id'] = $insert_result['oid'];
     unset($insert_result['oid']);
 
+
     // 将字典数据写入请求响应
     return $response->withJson($insert_result);
     // 异常访问出口
     Bad_request:
     return \WolfBolin\Slim\HTTP\Bad_request($response);
 });
+
 
 $app->put('/mission', function (Request $request, Response $response) {
     // 获取请求数据
@@ -95,6 +105,7 @@ $app->put('/mission', function (Request $request, Response $response) {
     $mission = $new_mission;
     unset($new_mission);
 
+
     // 更新MongoDB数据库
     $mongodb = $this->get('mongodb');
     $collection = $mongodb->selectCollection('mission');
@@ -107,9 +118,10 @@ $app->put('/mission', function (Request $request, Response $response) {
     } else {
         $update_result = [
             "_id" => $request->getQueryParams()['_id'],
-            "modified_count" => $update_result->getModifiedCount()
+            "mission_modified_count" => $update_result->getModifiedCount()
         ];
     }
+
 
     // 将字典数据写入请求响应
     return $response->withJson($update_result);
@@ -123,6 +135,43 @@ $app->put('/mission', function (Request $request, Response $response) {
 });
 
 
+$app->delete('/mission', function (Request $request, Response $response) {
+    // 获取请求数据
+    try {
+        $mission_id = $request->getQueryParams()['_id'];
+        if (empty($mission_id)) {
+            goto Not_found;
+        }
+        $mission_id = new MongoDB\BSON\ObjectId($mission_id);
+    } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
+        goto Bad_request;
+    }
+
+
+    // 更新MongoDB数据库
+    $mongodb = $this->get('mongodb');
+    $collection = $mongodb->selectCollection('mission');
+    $select_result = $collection->deleteOne(['_id' => $mission_id]);
+    if ($select_result->getDeletedCount() == 0) {
+        goto Not_modified;
+    } else {
+        $select_result = [
+            "_id" => $request->getQueryParams()['_id'],
+            "cookie_deleted_count" => $select_result->getDeletedCount()
+        ];
+    }
+
+
+    // 将字典数据写入请求响应
+    return $response->withJson($select_result);
+    // 异常访问出口
+    Bad_request:
+    return \WolfBolin\Slim\HTTP\Bad_request($response);
+    Not_found:
+    return \WolfBolin\Slim\HTTP\Not_found($response);
+    Not_modified:
+    return \WolfBolin\Slim\HTTP\Not_modified($response);
+});
 
 
 

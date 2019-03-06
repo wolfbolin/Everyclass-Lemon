@@ -18,7 +18,8 @@ $app->get('/receipt', function (Request $request, Response $response) {
         goto Bad_request;
     }
 
-    // 搜索MongoDB数据库
+
+    // 更新MongoDB数据库
     $db = $this->get('mongodb');
     // 获取任务数据
     $collection = $db->selectCollection('mission');
@@ -39,6 +40,7 @@ $app->get('/receipt', function (Request $request, Response $response) {
         );
     }
     $mission_list = $select_result;
+
 
     // 获取cookie数据
     $collection = $db->selectCollection('cookie');
@@ -63,6 +65,18 @@ $app->get('/receipt', function (Request $request, Response $response) {
     }
 
 
+    // 更新统计数据
+    $collection = $db->selectCollection('statistic');
+    $collection->updateOne(
+        ['key' => 'total_download'],
+        ['$inc' => ['value' => 1]]
+    );
+    $collection->updateOne(
+        ['key' => 'stage_download'],
+        ['$inc' => ['value' => 1]]
+    );
+
+
     // 将字典数据写入请求响应
     return $response->withJson($mission_list);
     // 异常访问出口
@@ -79,10 +93,11 @@ $app->post('/receipt', function (Request $request, Response $response) {
         if (!isset($json_data[$key]) || gettype($json_data[$key]) != gettype($value)) {
             goto Bad_request;
         }
-        $new_receipt[$key] = $value;
+        $new_receipt[$key] = $json_data[$key];
     }
     $receipt = $new_receipt;
     unset($new_receipt);
+
 
     // 更新MongoDB数据库
     $db = $this->get('mongodb');
@@ -92,40 +107,90 @@ $app->post('/receipt', function (Request $request, Response $response) {
     $insert_result = (array)$insert_result->getInsertedId();
     $insert_result['_id'] = $insert_result['oid'];
     $result = $insert_result;
-    unset($insert_result['oid'], $insert_result);
+    unset($result['oid'], $insert_result);
+
 
     // 更新任务信息
-    $collection = $db->selectCollection('mission');
-    $status = $receipt['status'];
-    if ($status != 'success' && $status != 'error') {
+    try {
+        $collection = $db->selectCollection('mission');
+        $status = $receipt['status'];
+        if ($status != 'success' && $status != 'error') {
+            goto Bad_request;
+        }
+        $update_result = $collection->updateOne(
+            ['_id' => (new MongoDB\BSON\ObjectId($receipt['mid']))],
+            ['$inc' => ['upload' => 1, "$status" => 1]]
+        );
+        $update_result = [
+            "mid" => $receipt['mid'],
+            "mission_modified_count" => $update_result->getModifiedCount()
+        ];
+        $result [] = $update_result;
+    } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
         goto Bad_request;
     }
-    $update_result = $collection->updateOne(
-        ['_id' => (new MongoDB\BSON\ObjectId($receipt['mid']))],
-        ['$inc' => ['upload' => 1, "$status" => 1]]
-    );
-    $update_result = [
-        "mid" => $receipt['mid'],
-        "mission_modified_count" => $update_result->getModifiedCount()
-    ];
-    $result [] = $update_result;
+
 
     // 更新cookie信息
-    $collection = $db->selectCollection('cookie');
-    $update_result = $collection->updateOne(
-        ['_id' => (new MongoDB\BSON\ObjectId($receipt['cid']))],
-        ['$inc' => ["$status" => 1]]
+    try {
+        $collection = $db->selectCollection('cookie');
+        $update_result = $collection->updateOne(
+            ['_id' => (new MongoDB\BSON\ObjectId($receipt['cid']))],
+            ['$inc' => ["$status" => 1]]
+        );
+        $update_result = [
+            "cid" => $receipt['cid'],
+            "cookie_modified_count" => $update_result->getModifiedCount()
+        ];
+        $result [] = $update_result;
+    } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
+        goto Bad_request;
+    }
+
+
+    // 更新统计数据
+    $collection = $db->selectCollection('statistic');
+    $collection->updateOne(
+        ['key' => 'total_upload'],
+        ['$inc' => ['value' => 1]],
+        ['upsert' => true]
     );
-    $update_result = [
-        "cid" => $receipt['cid'],
-        "cookie_modified_count" => $update_result->getModifiedCount()
-    ];
-    $result [] = $update_result;
+    $collection->updateOne(
+        ['key' => 'stage_upload'],
+        ['$inc' => ['value' => 1]],
+        ['upsert' => true]
+    );
+    $collection->updateOne(
+        ['key' => "total_$status"],
+        ['$inc' => ['value' => 1]],
+        ['upsert' => true]
+    );
+    $collection->updateOne(
+        ['key' => "stage_$status"],
+        ['$inc' => ['value' => 1]],
+        ['upsert' => true]
+    );
+
+
+    // 更新用户UA信息
+//    $select_result = $collection->findOne(
+//        ['key' => 'user_info', 'value' => ['$in' => [$receipt['user']]]],
+//        ['projection' => ['_id' => 1]]
+//    );
+//    if(empty($select_result)){
+//        // 用户UA未被记录
+//
+//    }else{
+//
+//    }
+
+
+
 
     // 将字典数据写入请求响应
-    return $response->withJson($result);
+//    return $response->withJson($select_result);
     // 异常访问出口
     Bad_request:
-    return \WolfBolin\Slim\HTTP\Bad_request($response);
+//    return \WolfBolin\Slim\HTTP\Bad_request($response);
 });
 

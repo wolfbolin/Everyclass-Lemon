@@ -9,23 +9,34 @@
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-$app->get('/statistic/hello-world', function () {
+$app->get('/statistic/hello_world', function () {
     return 'Hello, world!';
 });
 
-$app->get('/statistic/mongodb', function () {
-    $collection = $this->get('mongodb')->selectCollection('statistic');
+$app->get('/statistic/healthy', function (Request $request, Response $response) {
+    $check_list = [
+        'mongodb' => false
+    ];
 
-    $insertOneResult = $collection->findOne([
-        'key' => 'health_code'
-    ]);
-    var_dump($insertOneResult);
+    $mongodb = $this->get('mongodb');
+    $collection = $mongodb->selectCollection('statistic');
+    $select_result = $collection->findOne(
+        ['key' => 'check_code'],
+        ['projection' => ['_id' => 0]]
+    );
+    if ($select_result['value'] == '4pg^EFxv}mWKE-is') {
+        $check_list['mongodb'] = true;
+    }
+
+    $collection->updateOne(
+        ['key' => 'check_time'],
+        ['$set' => ['value' => time()]]
+    );
+
+    return $response->withJson($check_list);
 });
 
-$app->get('/404', function () {
-    $response = new \Slim\Http\Response(404);
-    $not_found = ["status" => "404 not found."];
-    return $response->withJson($not_found);
-});
+$app->get('/statistic', function (Request $request, Response $response) {
 
+});
 
