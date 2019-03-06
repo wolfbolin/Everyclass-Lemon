@@ -15,7 +15,7 @@ $app->get('/receipt', function (Request $request, Response $response) {
     if (empty($num)) {
         $num = 1;
     } elseif ($num < 2 || $num > 10) {
-        goto bad_request;
+        goto Bad_request;
     }
 
     // 搜索MongoDB数据库
@@ -66,12 +66,8 @@ $app->get('/receipt', function (Request $request, Response $response) {
     // 将字典数据写入请求响应
     return $response->withJson($mission_list);
     // 异常访问出口
-    bad_request:
-    $error_info = [
-        "status" => "error",
-        "info" => "访问参数异常"
-    ];
-    return $response->withStatus(403)->withJson($error_info);
+    Bad_request:
+    return \WolfBolin\Slim\HTTP\Bad_request($response);
 });
 
 $app->post('/receipt', function (Request $request, Response $response) {
@@ -81,7 +77,7 @@ $app->post('/receipt', function (Request $request, Response $response) {
     $new_receipt = [];
     foreach ($receipt as $key => $value) {
         if (!isset($json_data[$key]) || gettype($json_data[$key]) != gettype($value)) {
-            goto bad_request;
+            goto Bad_request;
         }
         $new_receipt[$key] = $value;
     }
@@ -102,7 +98,7 @@ $app->post('/receipt', function (Request $request, Response $response) {
     $collection = $db->selectCollection('mission');
     $status = $receipt['status'];
     if ($status != 'success' && $status != 'error') {
-        goto bad_request;
+        goto Bad_request;
     }
     $update_result = $collection->updateOne(
         ['_id' => (new MongoDB\BSON\ObjectId($receipt['mid']))],
@@ -129,11 +125,7 @@ $app->post('/receipt', function (Request $request, Response $response) {
     // 将字典数据写入请求响应
     return $response->withJson($result);
     // 异常访问出口
-    bad_request:
-    $error_info = [
-        "status" => "error",
-        "info" => "访问参数异常"
-    ];
-    return $response->withStatus(403)->withJson($error_info);
+    Bad_request:
+    return \WolfBolin\Slim\HTTP\Bad_request($response);
 });
 

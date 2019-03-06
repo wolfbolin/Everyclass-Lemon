@@ -9,6 +9,8 @@
 use Slim\Http\Request;
 use Slim\Http\Response;
 
+require_once __DIR__ . '/../util/http_respose.php';
+
 $app->get('/mission', function (Request $request, Response $response) {
     // 获取请求数据
     try {
@@ -17,7 +19,6 @@ $app->get('/mission', function (Request $request, Response $response) {
     } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
         goto Bad_request;
     }
-
 
     // 更新MongoDB数据库
     $mongodb = $this->get('mongodb');
@@ -33,11 +34,9 @@ $app->get('/mission', function (Request $request, Response $response) {
     return $response->withJson($select_result);
     // 异常访问出口
     Bad_request:
-    $error_info = ["status" => "error", "info" => "访问参数异常"];
-    return $response->withStatus(403)->withJson($error_info);
+    return \WolfBolin\Slim\HTTP\Bad_request($response);
     Not_found:
-    $error_info = ["status" => "error", "info" => "未找到指定的文档"];
-    return $response->withStatus(404)->withJson($error_info);
+    return \WolfBolin\Slim\HTTP\Not_found($response);
 });
 
 $app->post('/mission', function (Request $request, Response $response) {
@@ -70,8 +69,7 @@ $app->post('/mission', function (Request $request, Response $response) {
     return $response->withJson($insert_result);
     // 异常访问出口
     Bad_request:
-    $error_info = ["status" => "error", "info" => "访问参数异常"];
-    return $response->withStatus(403)->withJson($error_info);
+    return \WolfBolin\Slim\HTTP\Bad_request($response);
 });
 
 $app->put('/mission', function (Request $request, Response $response) {
@@ -89,10 +87,6 @@ $app->put('/mission', function (Request $request, Response $response) {
     $mission = $this->get('Data')['mission'];
     $new_mission = [];
     foreach ($mission as $key => $value) {
-        if ($key == 'download' || $key == 'upload' || $key == 'success' || $key == 'error') {
-            $new_mission[$key] = 0;
-            continue;
-        }
         if (!isset($json_data[$key]) || gettype($json_data[$key]) != gettype($value)) {
             goto Bad_request;
         }
@@ -109,7 +103,7 @@ $app->put('/mission', function (Request $request, Response $response) {
         ['$set' => $mission]
     );
     if ($update_result->getModifiedCount() == 0) {
-        goto Not_found;
+        goto Not_modified;
     } else {
         $update_result = [
             "_id" => $request->getQueryParams()['_id'],
@@ -121,11 +115,11 @@ $app->put('/mission', function (Request $request, Response $response) {
     return $response->withJson($update_result);
     // 异常访问出口
     Bad_request:
-    $error_info = ["status" => "error", "info" => "访问参数异常"];
-    return $response->withStatus(403)->withJson($error_info);
+    return \WolfBolin\Slim\HTTP\Bad_request($response);
     Not_found:
-    $error_info = ["status" => "error", "info" => "未找到指定的文档"];
-    return $response->withStatus(404)->withJson($error_info);
+    return \WolfBolin\Slim\HTTP\Not_found($response);
+    Not_modified:
+    return \WolfBolin\Slim\HTTP\Not_modified($response);
 });
 
 
