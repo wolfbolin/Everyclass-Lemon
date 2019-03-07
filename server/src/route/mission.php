@@ -25,7 +25,7 @@ $app->group('/mission', function (App $app) {
 
 
         // 更新MongoDB数据库
-        $db = new MongoDB\Database($this->get('mongodb'),$this->get('MongoDB')['db']);
+        $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
         $collection = $db->selectCollection('mission');
         $select_result = $collection->findOne(['_id' => $mission_id]);
         if (empty($select_result)) {
@@ -39,9 +39,9 @@ $app->group('/mission', function (App $app) {
         return $response->withJson($select_result);
         // 异常访问出口
         Bad_request:
-        return \WolfBolin\Slim\HTTP\Bad_request($response);
+        return WolfBolin\Slim\HTTP\Bad_request($response);
         Not_found:
-        return \WolfBolin\Slim\HTTP\Not_found($response);
+        return WolfBolin\Slim\HTTP\Not_found($response);
     });
 
 
@@ -67,7 +67,7 @@ $app->group('/mission', function (App $app) {
 
 
         // 更新MongoDB数据库
-        $db = new MongoDB\Database($this->get('mongodb'),$this->get('MongoDB')['db']);
+        $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
         $collection = $db->selectCollection('mission');
         $insert_result = $collection->insertOne($mission);
         $insert_result = (array)$insert_result->getInsertedId();
@@ -79,7 +79,7 @@ $app->group('/mission', function (App $app) {
         return $response->withJson($insert_result);
         // 异常访问出口
         Bad_request:
-        return \WolfBolin\Slim\HTTP\Bad_request($response);
+        return WolfBolin\Slim\HTTP\Bad_request($response);
     });
 
 
@@ -128,11 +128,11 @@ $app->group('/mission', function (App $app) {
         return $response->withJson($update_result);
         // 异常访问出口
         Bad_request:
-        return \WolfBolin\Slim\HTTP\Bad_request($response);
+        return WolfBolin\Slim\HTTP\Bad_request($response);
         Not_found:
-        return \WolfBolin\Slim\HTTP\Not_found($response);
+        return WolfBolin\Slim\HTTP\Not_found($response);
         Not_modified:
-        return \WolfBolin\Slim\HTTP\Not_modified($response);
+        return WolfBolin\Slim\HTTP\Not_modified($response);
     });
 
 
@@ -167,13 +167,13 @@ $app->group('/mission', function (App $app) {
         return $response->withJson($select_result);
         // 异常访问出口
         Bad_request:
-        return \WolfBolin\Slim\HTTP\Bad_request($response);
+        return WolfBolin\Slim\HTTP\Bad_request($response);
         Not_found:
-        return \WolfBolin\Slim\HTTP\Not_found($response);
+        return WolfBolin\Slim\HTTP\Not_found($response);
         Not_modified:
-        return \WolfBolin\Slim\HTTP\Not_modified($response);
+        return WolfBolin\Slim\HTTP\Not_modified($response);
     });
-});
+})->add(WolfBolin\Slim\Authority\x_auth_token());
 
 
 

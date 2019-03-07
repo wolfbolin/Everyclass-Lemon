@@ -10,8 +10,8 @@ use Slim\App;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-$app->group('/mission', function (App $app) {
-    $app->get('/cookie', function (Request $request, Response $response) {
+$app->group('/cookie', function (App $app) {
+    $app->get('', function (Request $request, Response $response) {
         // 获取请求数据
         try {
             $cookie_id = $request->getQueryParams()['_id'];
@@ -25,7 +25,7 @@ $app->group('/mission', function (App $app) {
 
 
         // 更新MongoDB数据库
-        $db = new MongoDB\Database($this->get('mongodb'),$this->get('MongoDB')['db']);
+        $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
         $collection = $db->selectCollection('cookie');
         $select_result = $collection->findOne(['_id' => $cookie_id]);
         if (empty($select_result)) {
@@ -39,13 +39,13 @@ $app->group('/mission', function (App $app) {
         return $response->withJson($select_result);
         // 异常访问出口
         Bad_request:
-        return \WolfBolin\Slim\HTTP\Bad_request($response);
+        return WolfBolin\Slim\HTTP\Bad_request($response);
         Not_found:
-        return \WolfBolin\Slim\HTTP\Not_found($response);
+        return WolfBolin\Slim\HTTP\Not_found($response);
     });
 
 
-    $app->post('/cookie', function (Request $request, Response $response) {
+    $app->post('', function (Request $request, Response $response) {
         // 获取请求数据
         $json_data = json_decode($request->getBody(), true);
         $cookie = $this->get('Data')['cookie'];
@@ -65,7 +65,7 @@ $app->group('/mission', function (App $app) {
 
 
         // 更新MongoDB数据库
-        $db = new MongoDB\Database($this->get('mongodb'),$this->get('MongoDB')['db']);
+        $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
         $collection = $db->selectCollection('cookie');
         $insert_result = $collection->insertOne($cookie);
         $insert_result = (array)$insert_result->getInsertedId();
@@ -77,11 +77,11 @@ $app->group('/mission', function (App $app) {
         return $response->withJson($insert_result);
         // 异常访问出口
         Bad_request:
-        return \WolfBolin\Slim\HTTP\Bad_request($response);
+        return WolfBolin\Slim\HTTP\Bad_request($response);
     });
 
 
-    $app->put('/cookie', function (Request $request, Response $response) {
+    $app->put('', function (Request $request, Response $response) {
         // 获取请求数据
         try {
             $cookie_id = $request->getQueryParams()['_id'];
@@ -106,7 +106,7 @@ $app->group('/mission', function (App $app) {
 
 
         // 更新MongoDB数据库
-        $db = new MongoDB\Database($this->get('mongodb'),$this->get('MongoDB')['db']);
+        $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
         $collection = $db->selectCollection('cookie');
         $update_result = $collection->updateOne(
             ['_id' => $cookie_id],
@@ -126,15 +126,15 @@ $app->group('/mission', function (App $app) {
         return $response->withJson($update_result);
         // 异常访问出口
         Bad_request:
-        return \WolfBolin\Slim\HTTP\Bad_request($response);
+        return WolfBolin\Slim\HTTP\Bad_request($response);
         Not_found:
-        return \WolfBolin\Slim\HTTP\Not_found($response);
+        return WolfBolin\Slim\HTTP\Not_found($response);
         Not_modified:
-        return \WolfBolin\Slim\HTTP\Not_modified($response);
+        return WolfBolin\Slim\HTTP\Not_modified($response);
     });
 
 
-    $app->delete('/cookie', function (Request $request, Response $response) {
+    $app->delete('', function (Request $request, Response $response) {
         // 获取请求数据
         try {
             $cookie_id = $request->getQueryParams()['_id'];
@@ -148,7 +148,7 @@ $app->group('/mission', function (App $app) {
 
 
         // 更新MongoDB数据库
-        $db = new MongoDB\Database($this->get('mongodb'),$this->get('MongoDB')['db']);
+        $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
         $collection = $db->selectCollection('cookie');
         $select_result = $collection->deleteOne(['_id' => $cookie_id]);
         if ($select_result->getDeletedCount() == 0) {
@@ -165,10 +165,10 @@ $app->group('/mission', function (App $app) {
         return $response->withJson($select_result);
         // 异常访问出口
         Bad_request:
-        return \WolfBolin\Slim\HTTP\Bad_request($response);
+        return WolfBolin\Slim\HTTP\Bad_request($response);
         Not_found:
-        return \WolfBolin\Slim\HTTP\Not_found($response);
+        return WolfBolin\Slim\HTTP\Not_found($response);
         Not_modified:
-        return \WolfBolin\Slim\HTTP\Not_modified($response);
+        return WolfBolin\Slim\HTTP\Not_modified($response);
     });
-});
+})->add(WolfBolin\Slim\Authority\x_auth_token());

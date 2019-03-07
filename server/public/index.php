@@ -12,6 +12,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // Use personal function
 require __DIR__ . '/../src/util/http_response.php';
+require __DIR__ . '/../src/util/authority.php';
 
 //session_start();
 

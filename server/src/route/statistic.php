@@ -10,11 +10,14 @@ use Slim\App;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-$app->group('/statistic', function (App $app) {
-    $app->get('/hello_world', function () {
-        return 'Hello, world!';
-    });
 
+$app->get('/hello_world', function (Request $request, Response $response) {
+    $result = ['status' => 'success', 'info' => 'Hello, world!'];
+    return $response->withJson($result);
+});
+
+
+$app->group('/statistic', function (App $app) {
     $app->get('/healthy', function (Request $request, Response $response) {
         $check_list = [
             'mongodb' => false
@@ -36,8 +39,6 @@ $app->group('/statistic', function (App $app) {
         );
 
         return $response->withJson($check_list);
-    });
-
-
+    })->add(WolfBolin\Slim\Authority\x_auth_token());
 });
 

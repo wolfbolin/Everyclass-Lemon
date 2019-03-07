@@ -29,4 +29,14 @@ function Not_found(Response $response, $info = "未找到指定的文档")
     return $response->withStatus(404)->withJson($error_info);
 }
 
+function Unauthorized(Response $response, $info = "需要验证身份")
+{
+    $error_info = ["status" => "error", "info" => "$info"];
+    return $response->withStatus(401)->withJson($error_info);
+}
 
+function Unauthorized3(Response $response, $info = "身份验证失败")
+{
+    $error_info = ["status" => "error", "info" => "$info"];
+    return $response->withStatus(401)->withJson($error_info);
+}
