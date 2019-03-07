@@ -11,7 +11,9 @@ use Slim\Http\Response;
 
 $app->get('/receipt', function (Request $request, Response $response) {
     // 获取请求数据
-    $num = intval($request->getQueryParams()['num']);
+    if (isset($request->getQueryParams()['num'])) {
+        $num = intval($request->getQueryParams()['num']);
+    }
     if (empty($num)) {
         $num = 1;
     } elseif ($num < 2 || $num > 10) {
@@ -20,7 +22,7 @@ $app->get('/receipt', function (Request $request, Response $response) {
 
 
     // 更新MongoDB数据库
-    $db = $this->get('mongodb');
+    $db = new MongoDB\Database($this->get('mongodb'),$this->get('MongoDB')['db']);
     // 获取任务数据
     $collection = $db->selectCollection('mission');
     $select_result = $collection->find(
@@ -63,6 +65,12 @@ $app->get('/receipt', function (Request $request, Response $response) {
             ['$inc' => ['download' => 1]]
         );
     }
+    if (count($mission_list) <= 1) {
+        if (count($mission_list) == 0) {
+            goto Not_found;
+        }
+        $mission_list = $mission_list[0];
+    }
 
 
     // 更新统计数据
@@ -82,6 +90,8 @@ $app->get('/receipt', function (Request $request, Response $response) {
     // 异常访问出口
     Bad_request:
     return \WolfBolin\Slim\HTTP\Bad_request($response);
+    Not_found:
+    return \WolfBolin\Slim\HTTP\Not_found($response);
 });
 
 $app->post('/receipt', function (Request $request, Response $response) {
@@ -100,7 +110,7 @@ $app->post('/receipt', function (Request $request, Response $response) {
 
 
     // 更新MongoDB数据库
-    $db = $this->get('mongodb');
+    $db = new MongoDB\Database($this->get('mongodb'),$this->get('MongoDB')['db']);
     // 写入回执信息
     $collection = $db->selectCollection('receipt');
     $insert_result = $collection->insertOne($receipt);
@@ -117,15 +127,11 @@ $app->post('/receipt', function (Request $request, Response $response) {
         if ($status != 'success' && $status != 'error') {
             goto Bad_request;
         }
-        $update_result = $collection->updateOne(
+        $collection->updateOne(
             ['_id' => (new MongoDB\BSON\ObjectId($receipt['mid']))],
             ['$inc' => ['upload' => 1, "$status" => 1]]
         );
-        $update_result = [
-            "mid" => $receipt['mid'],
-            "mission_modified_count" => $update_result->getModifiedCount()
-        ];
-        $result [] = $update_result;
+        $result = array_merge($result, ["mid" => $receipt['mid']]);
     } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
         goto Bad_request;
     }
@@ -134,15 +140,11 @@ $app->post('/receipt', function (Request $request, Response $response) {
     // 更新cookie信息
     try {
         $collection = $db->selectCollection('cookie');
-        $update_result = $collection->updateOne(
+        $collection->updateOne(
             ['_id' => (new MongoDB\BSON\ObjectId($receipt['cid']))],
             ['$inc' => ["$status" => 1]]
         );
-        $update_result = [
-            "cid" => $receipt['cid'],
-            "cookie_modified_count" => $update_result->getModifiedCount()
-        ];
-        $result [] = $update_result;
+        $result = array_merge($result, ["cid" => $receipt['cid']]);
     } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
         goto Bad_request;
     }
@@ -170,27 +172,51 @@ $app->post('/receipt', function (Request $request, Response $response) {
         ['$inc' => ['value' => 1]],
         ['upsert' => true]
     );
+    $collection->updateOne(
+        ['key' => "total_user"],
+        ['$inc' => ['value' => 1]],
+        ['upsert' => true]
+    );
+    $collection->updateOne(
+        ['key' => "stage_user"],
+        ['$inc' => ['value' => 1]],
+        ['upsert' => true]
+    );
 
 
     // 更新用户UA信息
-//    $select_result = $collection->findOne(
-//        ['key' => 'user_info', 'value' => ['$in' => [$receipt['user']]]],
-//        ['projection' => ['_id' => 1]]
-//    );
-//    if(empty($select_result)){
-//        // 用户UA未被记录
-//
-//    }else{
-//
-//    }
-
-
+    $collection = $db->selectCollection('user');
+    $select_result = $collection->findOne(
+        ['user_agent' => $receipt['user']],
+        ['projection' => ['_id' => 1]]
+    );
+    if (empty($select_result)) {
+        // 用户UA未被记录
+        $collection->insertOne([
+            'user_agent' => $receipt['user'],
+            'user_time' => 0,
+            'user_ip' => $_SERVER['REMOTE_ADDR'],
+            'last_modified' => time()
+        ]);
+    } else {
+        // 用户UA已被记录
+        $collection->updateOne(
+            ['user_agent' => $receipt['user']],
+            [
+                '$inc' => ['user_time' => 1],
+                '$set' => [
+                    'last_modified' => time(),
+                    'user_ip' => $_SERVER['REMOTE_ADDR']
+                ]
+            ]
+        );
+    }
 
 
     // 将字典数据写入请求响应
-//    return $response->withJson($select_result);
+    return $response->withJson($result);
     // 异常访问出口
     Bad_request:
-//    return \WolfBolin\Slim\HTTP\Bad_request($response);
+    return \WolfBolin\Slim\HTTP\Bad_request($response);
 });
 

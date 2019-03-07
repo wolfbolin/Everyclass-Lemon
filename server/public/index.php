@@ -6,7 +6,7 @@
  * Time: 0:23
  */
 
-use \Slim\App as App;
+use Slim\App;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -19,7 +19,7 @@ require __DIR__ . '/../src/util/http_response.php';
 $config = require __DIR__ . '/../src/config.php';
 
 // Instantiate the app
-$app = new \Slim\App($config);
+$app = new App($config);
 
 // Set up container
 require __DIR__ . '/../src/container.php';

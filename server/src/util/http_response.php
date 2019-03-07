@@ -7,18 +7,24 @@
  * @param $response
  * @return mixed
  */
+
 namespace WolfBolin\Slim\HTTP;
 
-function Not_modified($response) {
+use Slim\Http\Response;
+
+function Not_modified(Response $response)
+{
     return $response->withStatus(304);
 }
 
-function Bad_request($response, $info="访问参数异常") {
+function Bad_request(Response $response, $info = "访问参数异常")
+{
     $error_info = ["status" => "error", "info" => "$info"];
     return $response->withStatus(403)->withJson($error_info);
 }
 
-function Not_found($response, $info="未找到指定的文档") {
+function Not_found(Response $response, $info = "未找到指定的文档")
+{
     $error_info = ["status" => "error", "info" => "$info"];
     return $response->withStatus(404)->withJson($error_info);
 }

@@ -6,37 +6,38 @@
  * Time: 0:24
  */
 
+use Slim\App;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-$app->get('/statistic/hello_world', function () {
-    return 'Hello, world!';
-});
+$app->group('/statistic', function (App $app) {
+    $app->get('/hello_world', function () {
+        return 'Hello, world!';
+    });
 
-$app->get('/statistic/healthy', function (Request $request, Response $response) {
-    $check_list = [
-        'mongodb' => false
-    ];
+    $app->get('/healthy', function (Request $request, Response $response) {
+        $check_list = [
+            'mongodb' => false
+        ];
 
-    $mongodb = $this->get('mongodb');
-    $collection = $mongodb->selectCollection('statistic');
-    $select_result = $collection->findOne(
-        ['key' => 'check_code'],
-        ['projection' => ['_id' => 0]]
-    );
-    if ($select_result['value'] == '4pg^EFxv}mWKE-is') {
-        $check_list['mongodb'] = true;
-    }
+        $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
+        $collection = $db->selectCollection('statistic');
+        $select_result = $collection->findOne(
+            ['key' => 'check_code'],
+            ['projection' => ['_id' => 0]]
+        );
+        if ($select_result['value'] == '4pg^EFxv}mWKE-is') {
+            $check_list['mongodb'] = true;
+        }
 
-    $collection->updateOne(
-        ['key' => 'check_time'],
-        ['$set' => ['value' => time()]]
-    );
+        $collection->updateOne(
+            ['key' => 'check_time'],
+            ['$set' => ['value' => time()]]
+        );
 
-    return $response->withJson($check_list);
-});
+        return $response->withJson($check_list);
+    });
 
-$app->get('/statistic', function (Request $request, Response $response) {
 
 });
 
