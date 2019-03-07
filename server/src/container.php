@@ -11,27 +11,29 @@ use Slim\Container;
 
 $container = $app->getContainer();
 
+// Sentry inti
+$container['sentry'] = function (Container $a) {
+    $sentry_dsn = $a->get('Sentry_DSN');
+    $sentry_client = new Raven_Client($sentry_dsn,
+        [
+            'php_version' => phpversion()
+        ]
+    );
+    return $sentry_client;
+};
+
 // Error Handling
-$container['notFoundHandler'] = function ($c) {
-    return function ($request, $response) use ($c) {
+$container['notFoundHandler'] = function ($a) {
+    return function ($request, $response) use ($a) {
         return WolfBolin\Slim\HTTP\Not_found($response);
     };
 };
-$container['notAllowedHandler'] = function ($c) {
-    return function ($request, $response) use ($c) {
+$container['notAllowedHandler'] = function ($a) {
+    return function ($request, $response) use ($a) {
         return WolfBolin\Slim\HTTP\Not_allowed($response);
     };
 };
-$container['phpErrorHandler'] = function ($c) {
-    return function ($request, $response, $error) use ($c) {
-        return WolfBolin\Slim\HTTP\Server_error($response);
-    };
-};
-$container['errorHandler'] = function ($c) {
-    return function ($request, $response, $exception) use ($c) {
-        return WolfBolin\Slim\HTTP\Server_error($response);
-    };
-};
+
 
 //MongoDB
 $container['mongodb'] = function (Container $a) {

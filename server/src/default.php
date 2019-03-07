@@ -7,6 +7,7 @@
  */
 //Configuration
 return [
+    'Sentry_DSN' => '',
     'Auth_Token' => 'everyclass_token',
     'MongoDB' => [
         'db' => '',

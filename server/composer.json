@@ -1,9 +1,10 @@
 {
-    "require": {
-        "slim/slim": "^3.12",
-        "mongodb/mongodb": "^1.4",
-      "ext-curl": "*",
-      "ext-json": "*",
-      "ext-mongodb": "*"
-    }
+  "require": {
+    "slim/slim": "^3.12",
+    "mongodb/mongodb": "^1.4",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "ext-mongodb": "*",
+    "sentry/sentry": "^1.0"
+  }
 }

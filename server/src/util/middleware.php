@@ -6,7 +6,7 @@
  * Time: 14:11
  */
 
-namespace WolfBolin\Slim\Authority;
+namespace WolfBolin\Slim\Middleware;
 
 use Slim\Http\Request;
 use Slim\Http\Response;

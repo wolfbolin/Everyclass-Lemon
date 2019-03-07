@@ -39,6 +39,6 @@ $app->group('/statistic', function (App $app) {
         );
 
         return $response->withJson($check_list);
-    })->add(WolfBolin\Slim\Authority\x_auth_token());
+    })->add(WolfBolin\Slim\Middleware\x_auth_token());
 });
 

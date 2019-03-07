@@ -171,4 +171,4 @@ $app->group('/cookie', function (App $app) {
         Not_modified:
         return WolfBolin\Slim\HTTP\Not_modified($response);
     });
-})->add(WolfBolin\Slim\Authority\x_auth_token());
+})->add(WolfBolin\Slim\Middleware\x_auth_token());
