@@ -69,7 +69,7 @@ $app->group('/receipt', function (App $app) {
         }
         if (count($mission_list) <= 1) {
             if (count($mission_list) == 0) {
-                goto Not_found;
+                goto Not_acceptable;
             }
             $mission_list = $mission_list[0];
         }
@@ -92,8 +92,8 @@ $app->group('/receipt', function (App $app) {
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
-        Not_found:
-        return WolfBolin\Slim\HTTP\Not_found($response);
+        Not_acceptable:
+        return WolfBolin\Slim\HTTP\Not_acceptable($response);
     });
 
     $app->post('', function (Request $request, Response $response) {

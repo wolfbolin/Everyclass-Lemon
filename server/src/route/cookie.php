@@ -16,7 +16,7 @@ $app->group('/cookie', function (App $app) {
         try {
             $cookie_id = $request->getQueryParams()['_id'];
             if (empty($cookie_id)) {
-                goto Not_found;
+                goto Not_acceptable;
             }
             $cookie_id = new MongoDB\BSON\ObjectId($cookie_id);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
@@ -29,7 +29,7 @@ $app->group('/cookie', function (App $app) {
         $collection = $db->selectCollection('cookie');
         $select_result = $collection->findOne(['_id' => $cookie_id]);
         if (empty($select_result)) {
-            goto Not_found;
+            goto Not_acceptable;
         }
         $select_result = (array)$select_result->getArrayCopy();
         $select_result['_id'] = ((array)$select_result['_id'])['oid'];
@@ -40,8 +40,8 @@ $app->group('/cookie', function (App $app) {
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
-        Not_found:
-        return WolfBolin\Slim\HTTP\Not_found($response);
+        Not_acceptable:
+        return WolfBolin\Slim\HTTP\Not_acceptable($response);
     });
 
 
@@ -86,7 +86,7 @@ $app->group('/cookie', function (App $app) {
         try {
             $cookie_id = $request->getQueryParams()['_id'];
             if (empty($cookie_id)) {
-                goto Not_found;
+                goto Not_acceptable;
             }
             $cookie_id = new MongoDB\BSON\ObjectId($cookie_id);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
@@ -127,8 +127,8 @@ $app->group('/cookie', function (App $app) {
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
-        Not_found:
-        return WolfBolin\Slim\HTTP\Not_found($response);
+        Not_acceptable:
+        return WolfBolin\Slim\HTTP\Not_acceptable($response);
         Not_modified:
         return WolfBolin\Slim\HTTP\Not_modified($response);
     });
@@ -139,7 +139,7 @@ $app->group('/cookie', function (App $app) {
         try {
             $cookie_id = $request->getQueryParams()['_id'];
             if (empty($cookie_id)) {
-                goto Not_found;
+                goto Not_acceptable;
             }
             $cookie_id = new MongoDB\BSON\ObjectId($cookie_id);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
@@ -166,8 +166,8 @@ $app->group('/cookie', function (App $app) {
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
-        Not_found:
-        return WolfBolin\Slim\HTTP\Not_found($response);
+        Not_acceptable:
+        return WolfBolin\Slim\HTTP\Not_acceptable($response);
         Not_modified:
         return WolfBolin\Slim\HTTP\Not_modified($response);
     });

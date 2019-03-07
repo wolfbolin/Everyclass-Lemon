@@ -16,7 +16,7 @@ $app->group('/mission', function (App $app) {
         try {
             $mission_id = $request->getQueryParams()['_id'];
             if (empty($mission_id)) {
-                goto Not_found;
+                goto Not_acceptable;
             }
             $mission_id = new MongoDB\BSON\ObjectId($mission_id);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
@@ -29,7 +29,7 @@ $app->group('/mission', function (App $app) {
         $collection = $db->selectCollection('mission');
         $select_result = $collection->findOne(['_id' => $mission_id]);
         if (empty($select_result)) {
-            goto Not_found;
+            goto Not_acceptable;
         }
         $select_result = (array)$select_result->getArrayCopy();
         $select_result['_id'] = ((array)$select_result['_id'])['oid'];
@@ -40,8 +40,8 @@ $app->group('/mission', function (App $app) {
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
-        Not_found:
-        return WolfBolin\Slim\HTTP\Not_found($response);
+        Not_acceptable:
+        return WolfBolin\Slim\HTTP\Not_acceptable($response);
     });
 
 
@@ -88,7 +88,7 @@ $app->group('/mission', function (App $app) {
         try {
             $mission_id = $request->getQueryParams()['_id'];
             if (empty($mission_id)) {
-                goto Not_found;
+                goto Not_acceptable;
             }
             $mission_id = new MongoDB\BSON\ObjectId($mission_id);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
@@ -129,8 +129,8 @@ $app->group('/mission', function (App $app) {
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
-        Not_found:
-        return WolfBolin\Slim\HTTP\Not_found($response);
+        Not_acceptable:
+        return WolfBolin\Slim\HTTP\Not_acceptable($response);
         Not_modified:
         return WolfBolin\Slim\HTTP\Not_modified($response);
     });
@@ -141,7 +141,7 @@ $app->group('/mission', function (App $app) {
         try {
             $mission_id = $request->getQueryParams()['_id'];
             if (empty($mission_id)) {
-                goto Not_found;
+                goto Not_acceptable;
             }
             $mission_id = new MongoDB\BSON\ObjectId($mission_id);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
@@ -168,8 +168,8 @@ $app->group('/mission', function (App $app) {
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
-        Not_found:
-        return WolfBolin\Slim\HTTP\Not_found($response);
+        Not_acceptable:
+        return WolfBolin\Slim\HTTP\Not_acceptable($response);
         Not_modified:
         return WolfBolin\Slim\HTTP\Not_modified($response);
     });

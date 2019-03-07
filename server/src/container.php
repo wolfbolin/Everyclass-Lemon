@@ -8,7 +8,30 @@
 
 // Container
 use Slim\Container;
+
 $container = $app->getContainer();
+
+// Error Handling
+$container['notFoundHandler'] = function ($c) {
+    return function ($request, $response) use ($c) {
+        return WolfBolin\Slim\HTTP\Not_found($response);
+    };
+};
+$container['notAllowedHandler'] = function ($c) {
+    return function ($request, $response) use ($c) {
+        return WolfBolin\Slim\HTTP\Not_allowed($response);
+    };
+};
+$container['phpErrorHandler'] = function ($c) {
+    return function ($request, $response, $error) use ($c) {
+        return WolfBolin\Slim\HTTP\Server_error($response);
+    };
+};
+$container['errorHandler'] = function ($c) {
+    return function ($request, $response, $exception) use ($c) {
+        return WolfBolin\Slim\HTTP\Server_error($response);
+    };
+};
 
 //MongoDB
 $container['mongodb'] = function (Container $a) {
