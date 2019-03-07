@@ -11,13 +11,46 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 
 $app->group('/cookie', function (App $app) {
+    $app->post('', function (Request $request, Response $response) {
+        // 获取请求数据
+        $json_data = json_decode($request->getBody(), true);
+        $cookie = $this->get('Data')['cookie'];
+        foreach ($cookie as $key => &$value) {
+            if ($key == 'download' || $key == 'upload' || $key == 'success' || $key == 'error') {
+                continue;
+            }
+            if (!isset($json_data[$key]) || gettype($json_data[$key]) != gettype($value)) {
+                goto Bad_request;
+            }
+            $value = $json_data[$key];
+        }
+
+
+        // 更新MongoDB数据库
+        $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
+        $collection = $db->selectCollection('cookie');
+        $insert_result = $collection->insertOne($cookie);
+        $insert_result = (array)$insert_result->getInsertedId();
+        $insert_result['cid'] = $insert_result['oid'];
+        unset($insert_result['oid']);
+
+
+        // 将字典数据写入请求响应
+        return $response->withJson($insert_result);
+        // 异常访问出口
+        Bad_request:
+        return WolfBolin\Slim\HTTP\Bad_request($response);
+    });
+
+
     $app->get('', function (Request $request, Response $response) {
         // 获取请求数据
+        if (isset($request->getQueryParams()['cid']) && !empty($request->getQueryParam('cid'))) {
+            $cookie_id = $request->getQueryParam('cid');
+        } else {
+            goto Bad_request;
+        }
         try {
-            $cookie_id = $request->getQueryParams()['_id'];
-            if (empty($cookie_id)) {
-                goto Not_acceptable;
-            }
             $cookie_id = new MongoDB\BSON\ObjectId($cookie_id);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
             goto Bad_request;
@@ -32,7 +65,8 @@ $app->group('/cookie', function (App $app) {
             goto Not_acceptable;
         }
         $select_result = (array)$select_result->getArrayCopy();
-        $select_result['_id'] = ((array)$select_result['_id'])['oid'];
+        $select_result['cid'] = ((array)$select_result['_id'])['oid'];
+        unset($select_result['_id']);
 
 
         // 将字典数据写入请求响应
@@ -45,64 +79,26 @@ $app->group('/cookie', function (App $app) {
     });
 
 
-    $app->post('', function (Request $request, Response $response) {
-        // 获取请求数据
-        $json_data = json_decode($request->getBody(), true);
-        $cookie = $this->get('Data')['cookie'];
-        $new_cookie = [];
-        foreach ($cookie as $key => $value) {
-            if ($key == 'download' || $key == 'upload' || $key == 'success' || $key == 'error') {
-                $new_cookie[$key] = 0;
-                continue;
-            }
-            if (!isset($json_data[$key]) || gettype($json_data[$key]) != gettype($value)) {
-                goto Bad_request;
-            }
-            $new_cookie[$key] = $json_data[$key];
-        }
-        $cookie = $new_cookie;
-        unset($new_cookie);
-
-
-        // 更新MongoDB数据库
-        $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
-        $collection = $db->selectCollection('cookie');
-        $insert_result = $collection->insertOne($cookie);
-        $insert_result = (array)$insert_result->getInsertedId();
-        $insert_result['_id'] = $insert_result['oid'];
-        unset($insert_result['oid']);
-
-
-        // 将字典数据写入请求响应
-        return $response->withJson($insert_result);
-        // 异常访问出口
-        Bad_request:
-        return WolfBolin\Slim\HTTP\Bad_request($response);
-    });
-
-
     $app->put('', function (Request $request, Response $response) {
         // 获取请求数据
+        if (isset($request->getQueryParams()['cid']) && !empty($request->getQueryParam('cid'))) {
+            $cookie_id = $request->getQueryParam('cid');
+        } else {
+            goto Bad_request;
+        }
         try {
-            $cookie_id = $request->getQueryParams()['_id'];
-            if (empty($cookie_id)) {
-                goto Not_acceptable;
-            }
             $cookie_id = new MongoDB\BSON\ObjectId($cookie_id);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
             goto Bad_request;
         }
         $json_data = json_decode($request->getBody(), true);
         $cookie = $this->get('Data')['cookie'];
-        $new_cookie = [];
-        foreach ($cookie as $key => $value) {
+        foreach ($cookie as $key => &$value) {
             if (!isset($json_data[$key]) || gettype($json_data[$key]) != gettype($value)) {
                 goto Bad_request;
             }
-            $new_cookie[$key] = $json_data[$key];
+            $value = $json_data[$key];
         }
-        $cookie = $new_cookie;
-        unset($new_cookie);
 
 
         // 更新MongoDB数据库
@@ -116,7 +112,7 @@ $app->group('/cookie', function (App $app) {
             goto Not_modified;
         } else {
             $update_result = [
-                "_id" => $request->getQueryParams()['_id'],
+                "cid" => $request->getQueryParam('cid'),
                 "cookie_modified_count" => $update_result->getModifiedCount()
             ];
         }
@@ -127,8 +123,6 @@ $app->group('/cookie', function (App $app) {
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
-        Not_acceptable:
-        return WolfBolin\Slim\HTTP\Not_acceptable($response);
         Not_modified:
         return WolfBolin\Slim\HTTP\Not_modified($response);
     });
@@ -136,11 +130,12 @@ $app->group('/cookie', function (App $app) {
 
     $app->delete('', function (Request $request, Response $response) {
         // 获取请求数据
+        if (isset($request->getQueryParams()['cid']) && !empty($request->getQueryParam('cid'))) {
+            $cookie_id = $request->getQueryParam('cid');
+        } else {
+            goto Bad_request;
+        }
         try {
-            $cookie_id = $request->getQueryParams()['_id'];
-            if (empty($cookie_id)) {
-                goto Not_acceptable;
-            }
             $cookie_id = new MongoDB\BSON\ObjectId($cookie_id);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
             goto Bad_request;
@@ -155,7 +150,7 @@ $app->group('/cookie', function (App $app) {
             goto Not_modified;
         } else {
             $select_result = [
-                "_id" => $request->getQueryParams()['_id'],
+                "cid" => $request->getQueryParam('cid'),
                 "cookie_deleted_count" => $select_result->getDeletedCount()
             ];
         }
@@ -166,8 +161,6 @@ $app->group('/cookie', function (App $app) {
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
-        Not_acceptable:
-        return WolfBolin\Slim\HTTP\Not_acceptable($response);
         Not_modified:
         return WolfBolin\Slim\HTTP\Not_modified($response);
     });

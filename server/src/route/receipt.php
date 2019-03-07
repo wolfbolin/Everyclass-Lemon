@@ -13,12 +13,8 @@ use Slim\Http\Response;
 $app->group('/receipt', function (App $app) {
     $app->get('', function (Request $request, Response $response) {
         // 获取请求数据
-        if (isset($request->getQueryParams()['num'])) {
-            $num = intval($request->getQueryParams()['num']);
-        }
-        if (empty($num)) {
-            $num = 1;
-        } elseif ($num < 2 || $num > 10) {
+        $num = intval($request->getQueryParam('num', 1));
+        if ($num < 1 || $num > 10) {
             goto Bad_request;
         }
 
@@ -67,23 +63,19 @@ $app->group('/receipt', function (App $app) {
                 ['$inc' => ['download' => 1]]
             );
         }
-        if (count($mission_list) <= 1) {
-            if (count($mission_list) == 0) {
-                goto Not_acceptable;
-            }
-            $mission_list = $mission_list[0];
-        }
 
 
         // 更新统计数据
         $collection = $db->selectCollection('statistic');
         $collection->updateOne(
             ['key' => 'total_download'],
-            ['$inc' => ['value' => 1]]
+            ['$inc' => ['value' => 1]],
+            ['upsert' => true]
         );
         $collection->updateOne(
             ['key' => 'stage_download'],
-            ['$inc' => ['value' => 1]]
+            ['$inc' => ['value' => 1]],
+            ['upsert' => true]
         );
 
 
@@ -92,23 +84,18 @@ $app->group('/receipt', function (App $app) {
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
-        Not_acceptable:
-        return WolfBolin\Slim\HTTP\Not_acceptable($response);
     });
 
     $app->post('', function (Request $request, Response $response) {
         // 获取请求数据
         $json_data = json_decode($request->getBody(), true);
         $receipt = $this->get('Data')['receipt'];
-        $new_receipt = [];
-        foreach ($receipt as $key => $value) {
+        foreach ($receipt as $key => &$value) {
             if (!isset($json_data[$key]) || gettype($json_data[$key]) != gettype($value)) {
                 goto Bad_request;
             }
-            $new_receipt[$key] = $json_data[$key];
+            $value = $json_data[$key];
         }
-        $receipt = $new_receipt;
-        unset($new_receipt);
 
 
         // 更新MongoDB数据库
@@ -117,7 +104,7 @@ $app->group('/receipt', function (App $app) {
         $collection = $db->selectCollection('receipt');
         $insert_result = $collection->insertOne($receipt);
         $insert_result = (array)$insert_result->getInsertedId();
-        $insert_result['_id'] = $insert_result['oid'];
+        $insert_result['rid'] = $insert_result['oid'];
         $result = $insert_result;
         unset($result['oid'], $insert_result);
 
