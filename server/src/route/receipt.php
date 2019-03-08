@@ -100,13 +100,6 @@ $app->group('/receipt', function (App $app) {
 
         // 更新MongoDB数据库
         $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
-        // 写入回执信息
-        $collection = $db->selectCollection('receipt');
-        $insert_result = $collection->insertOne($receipt);
-        $insert_result = (array)$insert_result->getInsertedId();
-        $insert_result['rid'] = $insert_result['oid'];
-        $result = $insert_result;
-        unset($result['oid'], $insert_result);
 
 
         // 更新任务信息
@@ -120,10 +113,18 @@ $app->group('/receipt', function (App $app) {
                 ['_id' => (new MongoDB\BSON\ObjectId($receipt['mid']))],
                 ['$inc' => ['upload' => 1, "$status" => 1]]
             );
-            $result = array_merge($result, ["mid" => $receipt['mid']]);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
             goto Bad_request;
         }
+
+        // 写入回执信息
+        $collection = $db->selectCollection('receipt');
+        $insert_result = $collection->insertOne($receipt);
+        $insert_result = (array)$insert_result->getInsertedId();
+        $insert_result['rid'] = $insert_result['oid'];
+        $result = $insert_result;
+        unset($result['oid'], $insert_result);
+        $result = array_merge($result, ["mid" => $receipt['mid']]);
 
 
         // 更新cookie信息
@@ -139,38 +140,8 @@ $app->group('/receipt', function (App $app) {
         }
 
 
-        // 更新统计数据
-        $collection = $db->selectCollection('statistic');
-        $collection->updateOne(
-            ['key' => 'total_upload'],
-            ['$inc' => ['value' => 1]],
-            ['upsert' => true]
-        );
-        $collection->updateOne(
-            ['key' => 'stage_upload'],
-            ['$inc' => ['value' => 1]],
-            ['upsert' => true]
-        );
-        $collection->updateOne(
-            ['key' => "total_$status"],
-            ['$inc' => ['value' => 1]],
-            ['upsert' => true]
-        );
-        $collection->updateOne(
-            ['key' => "stage_$status"],
-            ['$inc' => ['value' => 1]],
-            ['upsert' => true]
-        );
-        $collection->updateOne(
-            ['key' => "total_user"],
-            ['$inc' => ['value' => 1]],
-            ['upsert' => true]
-        );
-        $collection->updateOne(
-            ['key' => "stage_user"],
-            ['$inc' => ['value' => 1]],
-            ['upsert' => true]
-        );
+        // 收集需要更新的统计信息
+        $receipt_list = $this->get('Statistic')['receipt_list'];
 
 
         // 更新用户UA信息
@@ -187,6 +158,9 @@ $app->group('/receipt', function (App $app) {
                 'user_ip' => $_SERVER['REMOTE_ADDR'],
                 'last_modified' => time()
             ]);
+            $receipt_list [] = 'total_user';
+            $receipt_list [] = 'stage_user';
+
         } else {
             // 用户UA已被记录
             $collection->updateOne(
@@ -200,6 +174,17 @@ $app->group('/receipt', function (App $app) {
                 ]
             );
         }
+
+
+        // 更新统计数据
+        $collection = $db->selectCollection('statistic');
+        $receipt_list [] = "total_$status";
+        $receipt_list [] = "stage_$status";
+        $collection->updateMany(
+            ['key' => ['$in' => $receipt_list]],
+            ['$inc' => ['value' => 1]],
+            ['upsert' => true]
+        );
 
 
         // 将字典数据写入请求响应

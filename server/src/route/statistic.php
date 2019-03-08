@@ -49,7 +49,7 @@ $app->group('/statistic', function (App $app) {
         $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
         $collection = $db->selectCollection('statistic');
         // 初始化查询课表
-        $result_list = $this->get('Statistic')['status'];
+        $result_list = $this->get('Statistic')['status_list'];
 
         // 逐项查询数据
         foreach ($result_list as $key => &$value){

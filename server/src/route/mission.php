@@ -11,6 +11,40 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 
 $app->group('/mission', function (App $app) {
+    $app->any('/init', function (Request $request, Response $response) {
+        $result = ['status' => 'success'];
+        // 清空历史数据并重置统计数据
+        $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
+        // 删除任务信息
+        $collection = $db->selectCollection('mission');
+        $delete_result = $collection->deleteMany([]);
+        $result = array_merge($result, ["mission_deleted_count" => $delete_result->getDeletedCount()]);
+
+        // 删除任务信息
+        $collection = $db->selectCollection('cookie');
+        $delete_result = $collection->deleteMany([]);
+        $result = array_merge($result, ["cookie_deleted_count" => $delete_result->getDeletedCount()]);
+
+        // 删除回执信息
+        $collection = $db->selectCollection('receipt');
+        $delete_result = $collection->deleteMany([]);
+        $result = array_merge($result, ["receipt_deleted_count" => $delete_result->getDeletedCount()]);
+
+        // 更新统计信息
+        $collection = $db->selectCollection('receipt');
+        $stage_list = $this->get('Statistic')['stage_list'];
+        $update_result = $collection->updateMany(['key' => ['$in' => $stage_list]], ['$set' => ['value' => 0]]);
+        $result = array_merge($result, ["statistic_update_count" => $update_result->getModifiedCount()]);
+
+        // 清空用户信息
+        $collection = $db->selectCollection('user');
+        $delete_result = $collection->deleteMany([]);
+        $result = array_merge($result, ["user_deleted_count" => $delete_result->getDeletedCount()]);
+
+        // 将字典数据写入请求响应
+        return $response->withJson($result);
+    });
+
     $app->post('', function (Request $request, Response $response) {
         // 获取请求数据
         $json_data = json_decode($request->getBody(), true);
