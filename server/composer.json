@@ -6,5 +6,10 @@
     "ext-json": "*",
     "ext-mongodb": "*",
     "sentry/sentry": "^1.0"
+  },
+  "config": {
+    "platform": {
+      "php": "7.2.12"
+    }
   }
 }

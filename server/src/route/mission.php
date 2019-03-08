@@ -84,7 +84,8 @@ $app->group('/mission', function (App $app) {
         );
 
         // 将字典数据写入请求响应
-        return $response->withJson($insert_result);
+        $result = array_merge($insert_result, ['status' => 'success']);
+        return $response->withJson($result);
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
@@ -118,7 +119,8 @@ $app->group('/mission', function (App $app) {
 
 
         // 将字典数据写入请求响应
-        return $response->withJson($select_result);
+        $result = array_merge($select_result, ['status' => 'success']);
+        return $response->withJson($result);
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
@@ -172,7 +174,8 @@ $app->group('/mission', function (App $app) {
 
 
         // 将字典数据写入请求响应
-        return $response->withJson($update_result);
+        $result = array_merge($update_result, ['status' => 'success']);
+        return $response->withJson($result);
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
@@ -213,7 +216,8 @@ $app->group('/mission', function (App $app) {
 
 
         // 将字典数据写入请求响应
-        return $response->withJson($delete_result);
+        $result = array_merge($delete_result, ['status' => 'success']);
+        return $response->withJson($result);
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);

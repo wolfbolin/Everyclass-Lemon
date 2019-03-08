@@ -7,6 +7,28 @@
 * 验证方式：自定义`X-Auth-Token`请求头
 * 特别提醒：任务上传时不需要携带cookie信息，cookie信息由服务器自动分配。
 
+### 任务初始化
+
+* URL路径：`/mission/init`
+
+* 请求方式：Any
+
+* 响应数据：
+
+  ```json
+  {
+      "status": "success",
+      "mission_deleted_count": 0,
+      "cookie_deleted_count": 0,
+      "receipt_deleted_count": 0,
+      "statistic_update_count": 0,
+      "user_deleted_count": 0
+  }
+  ```
+
+* 异常响应：
+  - HTTP401：需要身份认证
+
 ### 上传单个任务
 
 * URL路径：`/mission`
