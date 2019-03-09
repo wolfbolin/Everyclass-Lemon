@@ -67,10 +67,7 @@ $app->group('/task', function (App $app) {
             $select_result['cid'] = ((array)$select_result['_id'])['oid'];
         } else {
             // 无cookie可用
-            $select_result = [
-                'cid' => '',
-                'cookie' => ''
-            ];
+            $select_result = ['cid' => '', 'cookie' => ''];
         }
         foreach ($mission_list as &$mission) {
             $mission['cid'] = $select_result['cid'];
@@ -148,11 +145,13 @@ $app->group('/task', function (App $app) {
 
         // 更新cookie信息
         try {
-            $collection = $db->selectCollection('cookie');
-            $collection->updateOne(
-                ['_id' => (new MongoDB\BSON\ObjectId($task['cid']))],
-                ['$inc' => ["$status" => 1]]
-            );
+            if ($task['cid']) {
+                $collection = $db->selectCollection('cookie');
+                $collection->updateOne(
+                    ['_id' => (new MongoDB\BSON\ObjectId($task['cid']))],
+                    ['$inc' => ["$status" => 1]]
+                );
+            }
             $result = array_merge($result, ["cid" => $task['cid']]);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
             goto Bad_request;

@@ -45,6 +45,43 @@ $app->group('/mission', function (App $app) {
         return $response->withJson($result);
     });
 
+    $app->post('/bulk', function (Request $request, Response $response) {
+        $json_data = json_decode($request->getBody(), true);
+        $mission_list = [];
+        foreach ($json_data as $mission) {
+            $mission_form = $this->get('Data')['mission'];
+            foreach ($mission_form as $key => &$value) {
+                if ($key == 'download' || $key == 'upload' || $key == 'success' || $key == 'error') {
+                    continue;
+                }
+                if (!isset($mission[$key]) || gettype($mission[$key]) != gettype($value)) {
+                    goto Bad_request;
+                }
+                $value = $mission[$key];
+            }
+            $mission_form['header'] = (object)$mission_form['header'];
+            $mission_form['param'] = (object)$mission_form['param'];
+            $mission_list [] = $mission_form;
+        }
+
+
+        $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
+        $collection = $db->selectCollection('mission');
+        $insert_result = $collection->insertMany($mission_list);
+        $insert_result = (array)$insert_result->getInsertedIds();
+        $result = ['info' => []];
+        foreach ($insert_result as $each_result) {
+            $result['info'] [] = ((array)$each_result)['oid'];
+        }
+
+        // 将字典数据写入请求响应
+        $result = array_merge($result, ['status' => 'success']);
+        return $response->withJson($result);
+        // 异常访问出口
+        Bad_request:
+        return WolfBolin\Slim\HTTP\Bad_request($response);
+    });
+
     $app->post('', function (Request $request, Response $response) {
         // 获取请求数据
         $json_data = json_decode($request->getBody(), true);

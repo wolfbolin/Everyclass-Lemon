@@ -1,6 +1,24 @@
 #  Lemon_Tree 服务接口
 
+**协议版本：v0.1.0**
+
+**Protocol Version：v0.1.0**
+
 [TOC]
+
+## 综述
+
+## 更新日志
+
+**特别提醒**：所有线上服务，协议版本均应保持版本号前两位为一致的。
+
+**更新原则**：若只发生文档更新，前两位版本号将不发生变化。若接口内容发生变化，协议版本号前两位将会被更新并写入更新日志。
+
+### v0.1.0
+
+初始版本，未发布前版本
+
+
 
 ## 任务数据
 
@@ -27,6 +45,7 @@
   ```
 
 * 异常响应：
+
   - HTTP401：需要身份认证
 
 ### 上传单个任务
@@ -43,6 +62,7 @@
   ```json
   {
       "method": "GET",
+      "scheme": "http",
       "host": "baidux.tinoy.xyz",
       "path": "/index.html",
       "header": {
@@ -115,6 +135,7 @@
   ```json
   {
       "method": "GET",
+      "scheme": "http",
       "host": "baidux.tinoy.xyz",
       "path": "/index.html",
       "header": {
@@ -296,9 +317,13 @@
 
 ### 获取单个任务
 
-* URL路径：`/receipt`
+* URL路径：`/task`
 
 * 请求方式：GET
+
+* 相关说明：
+
+  * 当Cookie真的不存在时，cid和cookie字段仍然存在，但是为空。回传时仍需保留cid字段。
 
 * 响应数据：
 
@@ -325,12 +350,13 @@
   ]
   ```
 
-*  异常响应：
+* 异常响应：
+
   * HTTP403：访问参数异常
 
 ### 获取多个任务
 
-* URL路径：`/receipt?num=5`
+* URL路径：`/task?num=5`
 
 * 请求方式：GET
 
@@ -356,13 +382,14 @@
 
 ### 上传单个回执
 
-- URL路径：`/receipt`
+- URL路径：`/task`
 
 - 请求方式：POST
 
 - 相关说明：
 
-  请逐个上传回执信息，若上传失败请重试
+  * 请逐个上传回执信息，若上传失败请重试
+  * 即使cid为空，依然需要回传该字段，不可省略。
 
 - 发送数据：
 
@@ -374,7 +401,7 @@
       "code": 200,
       "data": "HTML doc",
       "time": 1551840263,
-      "user": "Go client(123456789)"
+      "user": "Go client(UUID)"
   }
   ```
 
@@ -392,11 +419,41 @@
 
   * HTTP403：访问参数异常
 
-## 数据统计
+## 服务信息
+
+## 心跳包
+
+* URL路径：`/hello_world`
+
+* 请求方式：GET
+
+* 响应数据：
+
+  ```json
+  {
+      "status": "success",
+      "info": "Hello, world!"
+  }
+  ```
+
+### 协议版本
+
+* URL路径：`/info/version`
+
+* 请求方式：GET
+
+* 响应数据：
+
+  ```json
+  {
+      "status": "success",
+      "version": "0.1.0"
+  }
+  ```
 
 ### 服务状态
 
-- URL路径：`/statistic/healthy`
+- URL路径：`/info/healthy`
 
 - 请求方式：GET
 
@@ -417,7 +474,7 @@
 
 ### 数据统计
 
-- URL路径：`/statistic/status`
+- URL路径：`/info/status`
 
 - 请求方式：GET
 
@@ -472,6 +529,7 @@
 | cid                | cookie编号                                     | string |
 | rid                | 回执编号                                       | string |
 | method             | HTTP请求方法                                   | string |
+| scheme             | HTTP/HTTPS                                     | string |
 | host               | HTTP请求主机地址                               | string |
 | path               | HTTP请求路径                                   | string |
 | header             | HTTP请求头                                     | map    |

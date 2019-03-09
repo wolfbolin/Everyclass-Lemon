@@ -17,7 +17,16 @@ $app->get('/hello_world', function (Request $request, Response $response) {
 });
 
 
-$app->group('/statistic', function (App $app) {
+$app->group('/info', function (App $app) {
+    $app->get('/version', function (Request $request, Response $response) {
+        $version = $this->get('Version');
+        $result = [
+            'status' => 'success',
+            'version' => $version
+        ];
+        return $response->withJson($result);
+    });
+
     $app->get('/healthy', function (Request $request, Response $response) {
         // 初始化健康检查列表
         $check_list = $this->get('Statistic')['check'];
@@ -30,7 +39,7 @@ $app->group('/statistic', function (App $app) {
                 ['key' => 'check_code'],
                 ['projection' => ['_id' => 0]]
             );
-            if ($select_result['value'] == '4pg^EFxv}mWKE-is') {
+            if ($select_result['value'] == $version = $this->get('Mongo_Token')) {
                 $check_list['mongodb'] = true;
             }
         } catch (MongoDB\Driver\Exception\ConnectionTimeoutException $e) {
