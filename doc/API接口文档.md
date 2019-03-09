@@ -29,7 +29,9 @@
 
 * URL路径：`/mission/init`
 
-* 请求方式：Any
+* 请求方式：GET
+
+* 相关说明：该操作将清空所有mission和cookie信息，并清空统计信息中包含`stage`的字段。
 
 * 响应数据：
 
@@ -80,7 +82,8 @@
 
   ```json
   {
-      "mid": "5c7d03b69eb5ef1cac0052b1"
+      "mid": "5c83e661e43c5d3a80007ae4",
+      "status": "success"
   }
   ```
 
@@ -100,6 +103,7 @@
   ```json
   {
       "method": "GET",
+      "scheme": "http",
       "host": "baidux.tinoy.xyz",
       "path": "/index.html",
       "header": {},
@@ -112,7 +116,8 @@
       "upload": 0,
       "success": 0,
       "error": 0,
-      "mid": "5c816aa7e43c5d31f40003f2"
+      "mid": "5c83e661e43c5d3a80007ae4",
+      "status": "success"
   }
   ```
 
@@ -158,8 +163,9 @@
 
   ```json
   {
-      "mid": "5c816aa7e43c5d31f40003f2",
-      "mission_modified_count": 1
+      "mid": "5c83e661e43c5d3a80007ae4",
+      "mission_modified_count": 1,
+      "status": "success"
   }
   ```
 
@@ -180,8 +186,9 @@
 
   ```json
   {
-      "mid": "5c816aa7e43c5d31f40003f2",
-      "mission_modified_count": 1
+      "mid": "5c83e661e43c5d3a80007ae4",
+      "mission_deleted_count": 1,
+      "status": "success"
   }
   ```
 
@@ -190,6 +197,42 @@
     - HTTP401：需要身份认证
     - HTTP403：访问参数异常
     - HTTP304：没有数据被修改
+
+### 上传多个任务
+
+* URL路径：`/mission/bulk`
+
+* 请求方式：POST
+
+* 上传数据：
+
+  * 数据格式：json
+  * 约束条件：单个任务对象的内容参考单任务样例
+
+  ```json
+  [
+      {},
+      {},
+      {}
+  ]
+  ```
+
+* 响应数据：
+
+  ```json
+  {
+      "info": [
+          "5c83e659e43c5d3a80007ae2",
+          "5c83e659e43c5d3a80007ae3"
+      ],
+      "status": "success"
+  }
+  ```
+
+* 异常响应：
+
+  * HTTP401：需要身份认证
+  * HTTP403：访问参数异常
 
 ## Cookie数据
 
@@ -217,7 +260,8 @@
 
   ```json
   {
-      "cid": "5c7d03b69eb5ef1cac0052b1"
+      "cid": "5c83f148e43c5d3a80007ae8",
+      "status": "success"
   }
   ```
 
@@ -242,7 +286,8 @@
       "upload": 0,
       "success": 0,
       "error": 0,
-      "cid": "5c8175cfe43c5d31f40003f6"
+      "cid": "5c83f148e43c5d3a80007ae8",
+      "status": "success"
   }
   ```
 
@@ -278,8 +323,9 @@
 
   ```json
   {
-      "cid": "5c8175cfe43c5d31f40003f6",
-      "cookie_modified_count": 1
+      "cid": "5c83f148e43c5d3a80007ae8",
+      "cookie_modified_count": 1,
+      "status": "success"
   }
   ```
 
@@ -300,14 +346,112 @@
 
   ```json
   {
-      "cid": "5c8175cfe43c5d31f40003f6",
-      "cookie_deleted_count": 1
+      "cid": "5c83edace43c5d3a80007ae7",
+      "cookie_deleted_count": 1,
+      "status": "success"
   }
   ```
 
 - 异常响应：
 
-    - HTTP401：需要身份认证
+  - HTTP401：需要身份认证
+  - HTTP403：访问参数异常
+  - HTTP304：没有数据被修改
+
+### 上传多个Cookie
+
+* URL路径：`/cookie/bulk`
+
+* 请求方式：POST
+
+* 上传数据：
+
+  - 数据格式：json
+  - 约束条件：单个任务对象的内容参考单任务样例
+
+  ```json
+  [
+      {},
+      {},
+      {}
+  ]
+  ```
+
+* 响应数据：
+
+  ```json
+  {
+      "info": [
+          "5c83eabde43c5d3a80007ae5",
+          "5c83eabde43c5d3a80007ae6"
+      ],
+      "status": "success"
+  }
+  ```
+
+* 异常响应：
+
+  * HTTP401：需要身份认证
+  * HTTP403：访问参数异常
+
+### 查询多个Cookie
+
+- URL路径：`/cookie/bulk?num=`
+- 请求方式：GET
+- 相关说明：
+  - num限定了获取的方案的数量，最小值为1，最大值为20，超过20的值将按照异常访问处理。
+  - 响应数据为json数组形式，数组中每个对象为单个Cookie信息
+  - 可能没有足够多的Cookie被返回（例如获取五个但是只有两个Cookie信息）
+  - 默认获取20条Cookie数据，优先列出error值较高的。
+
+- 响应数据：
+
+  ```json
+  {
+      "status": "success",
+      "info": [
+          {},
+          {},
+          {},
+          {}
+      ]
+  }
+  ```
+
+- 异常响应：
+
+  - HTTP401：需要身份认证
+  - HTTP403：访问参数异常
+  - HTTP304：没有数据被修改
+
+### 查询Cookie列表
+
+- URL路径：`/cookie/list`
+
+- 请求方式：GET
+
+- 相关说明：
+
+  - 响应中包含了所有Cookie的列表
+
+- 响应数据：
+
+  ```json
+  {
+      "status": "success",
+      "number": 4,
+      "cid": [
+          "5c82346be43c5d4b6c006383",
+          "5c83eabde43c5d3a80007ae5",
+          "5c83eabde43c5d3a80007ae6",
+          "5c83f148e43c5d3a80007ae8"
+      ]
+  }
+  ```
+
+- 异常响应：
+
+  - HTTP401：需要身份认证
   - HTTP403：访问参数异常
   - HTTP304：没有数据被修改
 
@@ -326,6 +470,8 @@
   * 当Cookie真的不存在时，cid和cookie字段仍然存在，但是为空。回传时仍需保留cid字段。
 
 * 响应数据：
+
+  **该响应格式将在0.2.0版本修改**
 
   ```json
   [
@@ -366,7 +512,9 @@
   * 响应数据为json数组形式，数组中每个对象为单个任务
   * 可能没有足够多的任务需要完成（例如获取五个但是只有两个任务）
 
-* 响应数据：
+* 响应数据：单个任务对象的内容参考单任务样例
+
+  **该响应格式将在0.2.0版本修改**
 
   ```json
   [
@@ -380,7 +528,7 @@
 
   - HTTP403：访问参数异常
 
-### 上传单个回执
+### 回执单个任务
 
 - URL路径：`/task`
 
@@ -406,6 +554,8 @@
   ```
 
 * 响应数据：
+
+  **该响应格式将在0.2.0版本修改**
 
   ```json
   {

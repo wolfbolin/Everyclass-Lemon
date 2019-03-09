@@ -11,7 +11,7 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 
 $app->group('/mission', function (App $app) {
-    $app->any('/init', function (Request $request, Response $response) {
+    $app->get('/init', function (Request $request, Response $response) {
         $result = ['status' => 'success'];
         // 清空历史数据并重置统计数据
         $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
@@ -46,6 +46,7 @@ $app->group('/mission', function (App $app) {
     });
 
     $app->post('/bulk', function (Request $request, Response $response) {
+        // 获取请求数据
         $json_data = json_decode($request->getBody(), true);
         $mission_list = [];
         foreach ($json_data as $mission) {
@@ -65,6 +66,7 @@ $app->group('/mission', function (App $app) {
         }
 
 
+        // 更新MongoDB数据库
         $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
         $collection = $db->selectCollection('mission');
         $insert_result = $collection->insertMany($mission_list);
