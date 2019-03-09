@@ -68,17 +68,19 @@ $app->group('/task', function (App $app) {
         } else {
             // 无cookie可用
             $select_result = [
-                'cid' => 0,
+                'cid' => '',
                 'cookie' => ''
             ];
         }
         foreach ($mission_list as &$mission) {
             $mission['cid'] = $select_result['cid'];
             $mission['cookie'] = $select_result['cookie'];
-            $collection->updateOne(
-                ['_id' => (new MongoDB\BSON\ObjectId($mission['cid']))],
-                ['$inc' => ['download' => 1]]
-            );
+            if ($mission['cid'] != '') {
+                $collection->updateOne(
+                    ['_id' => (new MongoDB\BSON\ObjectId($mission['cid']))],
+                    ['$inc' => ['download' => 1]]
+                );
+            }
         }
 
 

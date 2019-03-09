@@ -23,9 +23,11 @@ require __DIR__ . '/../src/util/middleware.php';
 
 // Set up config
 $config = require __DIR__ . '/../src/config.php';
+$static = require __DIR__ . '/../src/static.php';
+$parameter = array_merge($config, $static);
 
 // Instantiate the app
-$app = new App($config);
+$app = new App($parameter);
 
 // Set error handler
 unset($app->getContainer()['errorHandler']);
