@@ -79,7 +79,7 @@ $app->group('/cookie', function (App $app) {
         // 将字典数据写入请求响应
         $result = [
             'status' => 'success',
-            'info' => $select_result
+            'data' => $select_result
         ];
         return $response->withJson($result);
         // 异常访问出口
