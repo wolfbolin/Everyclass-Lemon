@@ -2,9 +2,10 @@
 /**
  * Created by PhpStorm.
  * User: wolfbolin
- * Date: 2019/3/9
- * Time: 12:29
+ * Date: 2019/3/22
+ * Time: 16:59
  */
+
 return [
     'Data' => [
         'mission' => [
@@ -52,12 +53,19 @@ return [
             'total_user' => '',
             'stage_user' => ''
         ],
+        'total_list' => [
+            'total_download',
+            'total_upload',
+            'total_success',
+            'total_error',
+            'total_user'
+        ],
         'stage_list' => [
             'stage_download',
             'stage_upload',
             'stage_success',
             'stage_error',
-            'stage_user',
+            'stage_user'
         ],
         'task_list' => [
             'total_upload',

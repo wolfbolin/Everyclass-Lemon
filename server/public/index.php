@@ -2,9 +2,10 @@
 /**
  * Created by PhpStorm.
  * User: wolfbolin
- * Date: 2019/3/3
- * Time: 0:23
+ * Date: 2019/3/22
+ * Time: 16:43
  */
+
 error_reporting(E_ALL);
 set_error_handler(function ($severity, $message, $file, $line) {
     if (error_reporting() & $severity) {
@@ -14,14 +15,13 @@ set_error_handler(function ($severity, $message, $file, $line) {
 
 use Slim\App;
 
-// Include composer
+// 引入Composer组建
 require __DIR__ . '/../vendor/autoload.php';
 
-// Use personal function
+// 注册私有工具
 require __DIR__ . '/../src/util/http_response.php';
-require __DIR__ . '/../src/util/middleware.php';
 
-// Set up config
+// 注册配置参数
 $config = require __DIR__ . '/../src/config.php';
 $static = require __DIR__ . '/../src/static.php';
 $parameter = array_merge($config, $static);
@@ -29,31 +29,19 @@ $parameter = array_merge($config, $static);
 // Instantiate the app
 $app = new App($parameter);
 
-// Set error handler
-unset($app->getContainer()['errorHandler']);
-unset($app->getContainer()['phpErrorHandler']);
-$sentry = new Raven_Client($config['Sentry_DSN']);;
-$error_handler = new Raven_ErrorHandler($sentry);
-$error_handler->registerExceptionHandler();
-$error_handler->registerErrorHandler();
-$error_handler->registerShutdownFunction();
-try {
-    $sentry->install();
-} catch (Raven_Exception $e) {
-    $sentry->captureException($e);
-}
-unset($sentry, $error_handler);
-
-// Set up container
+// 注册容器环境
 require __DIR__ . '/../src/container.php';
 
-// Register routes
-require __DIR__ . '/../src/route/statistic.php';
-require __DIR__ . '/../src/route/mission.php';
-require __DIR__ . '/../src/route/cookie.php';
+// 注册网络中间件
+require __DIR__ . '/../src/middleware.php';
+
+// 注册网络路由
+require __DIR__ . '/../src/route/info.php';
+//require __DIR__ . '/../src/route/mission.php';
+//require __DIR__ . '/../src/route/cookie.php';
 require __DIR__ . '/../src/route/task.php';
 
-// Run app
+// 运行应用程序
 try {
     $app->run();
 } catch (Exception $e) {
@@ -61,3 +49,5 @@ try {
     $sentry = $container->get('sentry');
     $sentry->captureException($e);
 }
+
+

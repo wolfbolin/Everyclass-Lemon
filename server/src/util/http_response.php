@@ -2,10 +2,8 @@
 /**
  * Created by PhpStorm.
  * User: wolfbolin
- * Date: 2019/3/6
- * Time: 19:36
- * @param $response
- * @return mixed
+ * Date: 2019/3/22
+ * Time: 16:49
  */
 
 namespace WolfBolin\Slim\HTTP;
@@ -64,3 +62,4 @@ function Service_unavailable(Response $response, $info = "服务暂时不可用"
     $error_info = ["status" => "error", "info" => "$info"];
     return $response->withStatus(503)->withJson($error_info);
 }
+

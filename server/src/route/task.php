@@ -2,8 +2,8 @@
 /**
  * Created by PhpStorm.
  * User: wolfbolin
- * Date: 2019/3/3
- * Time: 20:22
+ * Date: 2019/3/22
+ * Time: 22:20
  */
 
 use Slim\App;
@@ -11,6 +11,7 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 
 $app->group('/task', function (App $app) {
+    // 获取单个回执任务
     $app->get('', function (Request $request, Response $response) {
         // 获取请求数据
         $num = intval($request->getQueryParam('num', 1));
@@ -18,9 +19,8 @@ $app->group('/task', function (App $app) {
             goto Bad_request;
         }
 
-
         // 更新MongoDB数据库
-        $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
+        $db = new MongoDB\Database($this->get('mongodb_client'), $this->get('MongoDB')['db']);
         // 获取任务数据
         $collection = $db->selectCollection('mission');
         $select_result = $collection->find(
@@ -47,7 +47,6 @@ $app->group('/task', function (App $app) {
             );
         }
         $mission_list = $select_result;
-
 
         // 获取cookie数据
         $collection = $db->selectCollection('cookie');
@@ -80,7 +79,6 @@ $app->group('/task', function (App $app) {
             }
         }
 
-
         // 更新统计数据
         $collection = $db->selectCollection('statistic');
         $collection->updateOne(
@@ -94,13 +92,21 @@ $app->group('/task', function (App $app) {
             ['upsert' => true]
         );
 
-
         // 将字典数据写入请求响应
-        return $response->withJson($mission_list);
+        $result = [
+            'status' => 'success',
+            'data' => $mission_list,
+            'info' => [
+                'num' => $num,
+                'count' => count($mission_list)
+            ]
+        ];
+        return $response->withJson($result);
         // 异常访问出口
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
     });
+
 
     $app->post('', function (Request $request, Response $response) {
         // 获取请求数据
@@ -113,13 +119,11 @@ $app->group('/task', function (App $app) {
             $value = $json_data[$key];
         }
 
-
         // 更新MongoDB数据库
-        $db = new MongoDB\Database($this->get('mongodb'), $this->get('MongoDB')['db']);
-
-
-        // 更新任务信息
+        $db = new MongoDB\Database($this->get('mongodb_client'), $this->get('MongoDB')['db']);
+        // 更新任务与Cookie信息
         try {
+            // 更新任务信息
             $collection = $db->selectCollection('mission');
             $status = $task['status'];
             if ($status != 'success' && $status != 'error') {
@@ -129,6 +133,15 @@ $app->group('/task', function (App $app) {
                 ['_id' => (new MongoDB\BSON\ObjectId($task['mid']))],
                 ['$inc' => ['upload' => 1, "$status" => 1]]
             );
+
+            // 更新Cookie信息
+            if ($task['cid']) {
+                $collection = $db->selectCollection('cookie');
+                $collection->updateOne(
+                    ['_id' => (new MongoDB\BSON\ObjectId($task['cid']))],
+                    ['$inc' => ['upload' => 1, "$status" => 1]]
+                );
+            }
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
             goto Bad_request;
         }
@@ -141,26 +154,10 @@ $app->group('/task', function (App $app) {
         $result = $insert_result;
         unset($result['oid'], $insert_result);
         $result = array_merge($result, ["mid" => $task['mid']]);
-
-
-        // 更新cookie信息
-        try {
-            if ($task['cid']) {
-                $collection = $db->selectCollection('cookie');
-                $collection->updateOne(
-                    ['_id' => (new MongoDB\BSON\ObjectId($task['cid']))],
-                    ['$inc' => ["$status" => 1]]
-                );
-            }
-            $result = array_merge($result, ["cid" => $task['cid']]);
-        } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
-            goto Bad_request;
-        }
-
+        $result = array_merge($result, ["cid" => $task['cid']]);
 
         // 收集需要更新的统计信息
-        $task_list = $this->get('Statistic')['task_list'];
-
+        $task_update_list = $this->get('Statistic')['task_list'];
 
         // 更新用户UA信息
         $collection = $db->selectCollection('user');
@@ -172,12 +169,12 @@ $app->group('/task', function (App $app) {
             // 用户UA未被记录
             $collection->insertOne([
                 'user_agent' => $task['user'],
-                'user_time' => 0,
+                'user_time' => 1,
                 'user_ip' => $_SERVER['REMOTE_ADDR'],
                 'last_modified' => time()
             ]);
-            $task_list [] = 'total_user';
-            $task_list [] = 'stage_user';
+            $task_update_list [] = 'total_user';
+            $task_update_list [] = 'stage_user';
 
         } else {
             // 用户UA已被记录
@@ -193,17 +190,15 @@ $app->group('/task', function (App $app) {
             );
         }
 
-
         // 更新统计数据
         $collection = $db->selectCollection('statistic');
-        $task_list [] = "total_$status";
-        $task_list [] = "stage_$status";
+        $task_update_list [] = "total_$status";
+        $task_update_list [] = "stage_$status";
         $collection->updateMany(
-            ['key' => ['$in' => $task_list]],
+            ['key' => ['$in' => $task_update_list]],
             ['$inc' => ['value' => 1]],
             ['upsert' => true]
         );
-
 
         // 将字典数据写入请求响应
         return $response->withJson($result);
@@ -211,5 +206,7 @@ $app->group('/task', function (App $app) {
         Bad_request:
         return WolfBolin\Slim\HTTP\Bad_request($response);
     });
-});
+})->add(\WolfBolin\Slim\Middleware\x_auth_token())
+    ->add(\WolfBolin\Slim\Middleware\maintenance_mode())
+    ->add(\WolfBolin\Slim\Middleware\access_record());
 

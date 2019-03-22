@@ -1,3 +1,0 @@
-docker build --tag lemon_tree:latest .
-
-docker run -itd --name lemon_tree -v "$PWD":/www -p 25600:80 lemon_tree

@@ -471,33 +471,35 @@
 
 * 响应数据：
 
-  **该响应格式将在0.2.0版本修改**
-
   ```json
-  [
-      {
-          "method": "GET",
-          "host": "baidux.tinoy.xyz",
-          "path": "/index.html",
-          "header": {},
-          "param": {
-              "q": "wolfbolin"
-          },
-          "data": "",
-          "target": 1,
-          "download": 0,
-          "upload": 0,
-          "success": 0,
-          "error": 0,
-          "mid": "5c816b2ae43c5d31f40003f3",
-          "cid": "5c8175c4e43c5d31f40003f5",
-          "cookie": "my cookie 1"
+  {
+      "status": "success",
+      "data": [
+          {
+              "method": "GET",
+              "scheme": "http",
+              "host": "baidux.tinoy.xyz",
+              "path": "/index.html",
+              "header": {},
+              "param": {
+                  "q": "wolfbolin"
+              },
+              "data": "",
+              "mid": "5c83e659e43c5d3a80007ae2",
+              "cid": "5c83f148e43c5d3a80007ae8",
+              "cookie": "my cookie 1"
+          }
+      ],
+      "info": {
+          "num": 1,
+          "count": 1
       }
-  ]
+  }
   ```
 
 * 异常响应：
 
+  * HTTP401：需要身份认证
   * HTTP403：访问参数异常
 
 ### 获取多个任务
@@ -514,18 +516,49 @@
 
 * 响应数据：单个任务对象的内容参考单任务样例
 
-  **该响应格式将在0.2.0版本修改**
-
   ```json
-  [
-      {},
-      {},
-      {}
-  ]
+  {
+      "status": "success",
+      "data": [
+          {
+              "method": "GET",
+              "scheme": "http",
+              "host": "baidux.tinoy.xyz",
+              "path": "/index.html",
+              "header": {},
+              "param": {
+                  "q": "wolfbolin"
+              },
+              "data": "",
+              "mid": "5c83e659e43c5d3a80007ae2",
+              "cid": "5c83f148e43c5d3a80007ae8",
+              "cookie": "my cookie 1"
+          },
+          {
+              "method": "GET",
+              "scheme": "http",
+              "host": "baidux.tinoy.xyz",
+              "path": "/index.html",
+              "header": {},
+              "param": {
+                  "q": "wolfbolin"
+              },
+              "data": "",
+              "mid": "5c83e659e43c5d3a80007ae2",
+              "cid": "5c83f148e43c5d3a80007ae8",
+              "cookie": "my cookie 1"
+          }
+      ],
+      "info": {
+          "num": 3,
+          "count": 2
+      }
+  }
   ```
 
 * 异常响应：
 
+  * HTTP401：需要身份认证
   - HTTP403：访问参数异常
 
 ### 回执单个任务
@@ -567,6 +600,7 @@
 
 * 异常响应：
 
+  * HTTP401：需要身份认证
   * HTTP403：访问参数异常
 
 ## 服务信息
