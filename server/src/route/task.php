@@ -152,7 +152,7 @@ $app->group('/task', function (App $app) {
         $result = array_merge($result, ["cid" => $task['cid']]);
 
         // 收集需要更新的统计信息
-        $task_update_list = $this->get('Statistic')['task_list'];
+        $task_update_list = $this->get('Info')['task_list'];
 
         // 更新用户UA信息
         $collection = $db->selectCollection('user');
@@ -196,6 +196,7 @@ $app->group('/task', function (App $app) {
         );
 
         // 将字典数据写入请求响应
+        $result = array_merge($result, ['status' => 'success']);
         return $response->withJson($result);
         // 异常访问出口
         Bad_request:
