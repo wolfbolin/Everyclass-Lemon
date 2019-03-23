@@ -2,35 +2,52 @@
 /**
  * Created by PhpStorm.
  * User: wolfbolin
- * Date: 2019/3/3
- * Time: 0:23
+ * Date: 2019/3/22
+ * Time: 16:43
  */
 
-use \Slim\App as App;
+error_reporting(E_ALL);
+set_error_handler(function ($severity, $message, $file, $line) {
+    if (error_reporting() & $severity) {
+        throw new \ErrorException($message, 0, $severity, $file, $line);
+    }
+});
 
+use Slim\App;
+
+// 引入Composer组建
 require __DIR__ . '/../vendor/autoload.php';
 
-//session_start();
+// 注册私有工具
+require __DIR__ . '/../src/util/http_response.php';
 
-// Set up config
+// 注册配置参数
 $config = require __DIR__ . '/../src/config.php';
+$static = require __DIR__ . '/../src/static.php';
+$parameter = array_merge($config, $static);
 
 // Instantiate the app
-$app = new \Slim\App($config);
+$app = new App($parameter);
 
-// Set up container
+// 注册容器环境
 require __DIR__ . '/../src/container.php';
 
-// Register middleware
-//require __DIR__ . '/../src/middleware.php';
+// 注册网络中间件
+require __DIR__ . '/../src/middleware.php';
 
-// Register routes
-require __DIR__ . '/../src/route/statistic.php';
+// 注册网络路由
+require __DIR__ . '/../src/route/info.php';
 require __DIR__ . '/../src/route/mission.php';
-require __DIR__ . '/../src/route/solution.php';
+require __DIR__ . '/../src/route/cookie.php';
+require __DIR__ . '/../src/route/task.php';
 
-// Run app
+// 运行应用程序
 try {
     $app->run();
 } catch (Exception $e) {
+    $container = $app->getContainer();
+    $sentry = $container->get('sentry');
+    $sentry->captureException($e);
 }
+
+

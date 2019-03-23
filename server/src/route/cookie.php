@@ -2,74 +2,38 @@
 /**
  * Created by PhpStorm.
  * User: wolfbolin
- * Date: 2019/3/22
- * Time: 23:38
+ * Date: 2019/3/24
+ * Time: 0:41
  */
 
 use Slim\App;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-$app->group('/mission', function (App $app) {
-    $app->get('/init', function (Request $request, Response $response) {
-        $result = ['status' => 'success'];
-        // 清空历史数据并重置统计数据
-        $db = new MongoDB\Database($this->get('mongodb_client'), $this->get('MongoDB')['db']);
-        // 删除任务信息
-        $collection = $db->selectCollection('mission');
-        $delete_result = $collection->deleteMany([]);
-        $result = array_merge($result, ["mission_deleted_count" => $delete_result->getDeletedCount()]);
-
-        // 删除任务信息
-        $collection = $db->selectCollection('cookie');
-        $delete_result = $collection->deleteMany([]);
-        $result = array_merge($result, ["cookie_deleted_count" => $delete_result->getDeletedCount()]);
-
-        // 删除回执信息
-        $collection = $db->selectCollection('task');
-        $delete_result = $collection->deleteMany([]);
-        $result = array_merge($result, ["task_deleted_count" => $delete_result->getDeletedCount()]);
-
-        // 更新统计信息
-        $collection = $db->selectCollection('info');
-        $stage_list = $this->get('Info')['stage_list'];
-        $update_result = $collection->updateMany(['key' => ['$in' => $stage_list]], ['$set' => ['value' => 0]]);
-        $result = array_merge($result, ["info_update_count" => $update_result->getModifiedCount()]);
-
-        // 清空用户信息
-        $collection = $db->selectCollection('user');
-        $delete_result = $collection->deleteMany([]);
-        $result = array_merge($result, ["user_deleted_count" => $delete_result->getDeletedCount()]);
-
-        // 将字典数据写入请求响应
-        return $response->withJson($result);
-    });
-
-
+$app->group('/cookie', function (App $app) {
+    // 批量提交Cookie信息
     $app->post('/bulk', function (Request $request, Response $response) {
         // 获取请求数据
         $json_data = json_decode($request->getBody(), true);
-        $mission_list = [];
-        foreach ($json_data as $mission) {
-            $mission_form = $this->get('Data')['mission'];
+        $cookie_list = [];
+        foreach ($json_data as $cookie) {
+            $mission_form = $this->get('Data')['cookie'];
             foreach ($mission_form as $key => &$value) {
                 if ($key == 'download' || $key == 'upload' || $key == 'success' || $key == 'error') {
                     continue;
                 }
-                if (!isset($mission[$key]) || gettype($mission[$key]) != gettype($value)) {
+                if (!isset($cookie[$key]) || gettype($cookie[$key]) != gettype($value)) {
                     goto Bad_request;
                 }
-                $value = $mission[$key];
+                $value = $cookie[$key];
             }
-            $mission_form['header'] = (object)$mission_form['header'];
-            $mission_form['param'] = (object)$mission_form['param'];
-            $mission_list [] = $mission_form;
+            $cookie_list [] = $mission_form;
         }
 
         // 更新MongoDB数据库
         $db = new MongoDB\Database($this->get('mongodb_client'), $this->get('MongoDB')['db']);
-        $collection = $db->selectCollection('mission');
-        $insert_result = $collection->insertMany($mission_list);
+        $collection = $db->selectCollection('cookie');
+        $insert_result = $collection->insertMany($cookie_list);
         $insert_result = (array)$insert_result->getInsertedIds();
         $result = ['info' => []];
         foreach ($insert_result as $each_result) {
@@ -85,11 +49,72 @@ $app->group('/mission', function (App $app) {
     });
 
 
+    // 批量获取Cookie信息
+    $app->get('/bulk', function (Request $request, Response $response) {
+        // 获取请求数据
+        $num = intval($request->getQueryParam('num', 20));
+        if ($num < 1 || $num > 20) {
+            goto Bad_request;
+        }
+
+        // 获取Cookie信息
+        $db = new MongoDB\Database($this->get('mongodb_client'), $this->get('MongoDB')['db']);
+        $collection = $db->selectCollection('cookie');
+        $select_result = $collection->find(
+            [],
+            [
+                'sort' => ['error' => -1, 'success' => 1, 'download' => -1],
+                'limit' => $num
+            ]
+        );
+        $select_result = (array)$select_result->toArray();
+        foreach ($select_result as &$cookie) {
+            $cookie['mid'] = ((array)$cookie['_id'])['oid'];
+            unset($cookie['_id']);
+        }
+
+        // 将字典数据写入请求响应
+        $result = [
+            'status' => 'success',
+            'data' => $select_result
+        ];
+        return $response->withJson($result);
+        // 异常访问出口
+        Bad_request:
+        return WolfBolin\Slim\HTTP\Bad_request($response);
+    });
+
+
+    // 列出Cookie条目
+    $app->get('/list', function (Request $request, Response $response) {
+        // 获取Cookie信息
+        $db = new MongoDB\Database($this->get('mongodb_client'), $this->get('MongoDB')['db']);
+        $collection = $db->selectCollection('cookie');
+        $select_result = $collection->find(
+            [],
+            ['projection' => ['_id' => 1]   ]
+        );
+        $select_result = (array)$select_result->toArray();
+        foreach ($select_result as &$cookie) {
+            $cookie = ((array)$cookie['_id'])['oid'];
+        }
+
+        // 将字典数据写入请求响应
+        $result = [
+            'status' => 'success',
+            'number' => count($select_result),
+            'cid' => $select_result
+        ];
+        return $response->withJson($result);
+    });
+
+
+    // 上传单个的Cookie信息
     $app->post('', function (Request $request, Response $response) {
         // 获取请求数据
         $json_data = json_decode($request->getBody(), true);
-        $mission = $this->get('Data')['mission'];
-        foreach ($mission as $key => &$value) {
+        $cookie = $this->get('Data')['cookie'];
+        foreach ($cookie as $key => &$value) {
             if ($key == 'download' || $key == 'upload' || $key == 'success' || $key == 'error') {
                 continue;
             }
@@ -98,29 +123,14 @@ $app->group('/mission', function (App $app) {
             }
             $value = $json_data[$key];
         }
-        $mission['header'] = (object)$mission['header'];
-        $mission['param'] = (object)$mission['param'];
 
         // 更新MongoDB数据库
         $db = new MongoDB\Database($this->get('mongodb_client'), $this->get('MongoDB')['db']);
-        $collection = $db->selectCollection('mission');
-        $insert_result = $collection->insertOne($mission);
+        $collection = $db->selectCollection('cookie');
+        $insert_result = $collection->insertOne($cookie);
         $insert_result = (array)$insert_result->getInsertedId();
-        $insert_result['mid'] = $insert_result['oid'];
+        $insert_result['cid'] = $insert_result['oid'];
         unset($insert_result['oid']);
-
-        // 更新统计数据
-        $collection = $db->selectCollection('statistic');
-        $collection->updateOne(
-            ['key' => 'total_target'],
-            ['$inc' => ['value' => 1]],
-            ['upsert' => true]
-        );
-        $collection->updateOne(
-            ['key' => 'stage_target'],
-            ['$inc' => ['value' => 1]],
-            ['upsert' => true]
-        );
 
         // 将字典数据写入请求响应
         $result = array_merge($insert_result, ['status' => 'success']);
@@ -131,28 +141,29 @@ $app->group('/mission', function (App $app) {
     });
 
 
+    // 获取单个的Cookie信息
     $app->get('', function (Request $request, Response $response) {
         // 获取请求数据
-        if (isset($request->getQueryParams()['mid']) && !empty($request->getQueryParam('mid'))) {
-            $mission_id = $request->getQueryParam('mid');
+        if (isset($request->getQueryParams()['cid']) && !empty($request->getQueryParam('cid'))) {
+            $cookie_id = $request->getQueryParam('cid');
         } else {
             goto Bad_request;
         }
         try {
-            $mission_id = new MongoDB\BSON\ObjectId($mission_id);
+            $cookie_id = new MongoDB\BSON\ObjectId($cookie_id);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
             goto Bad_request;
         }
 
         // 更新MongoDB数据库
         $db = new MongoDB\Database($this->get('mongodb_client'), $this->get('MongoDB')['db']);
-        $collection = $db->selectCollection('mission');
-        $select_result = $collection->findOne(['_id' => $mission_id]);
+        $collection = $db->selectCollection('cookie');
+        $select_result = $collection->findOne(['_id' => $cookie_id]);
         if (empty($select_result)) {
             goto Not_acceptable;
         }
         $select_result = (array)$select_result->getArrayCopy();
-        $select_result['mid'] = ((array)$select_result['_id'])['oid'];
+        $select_result['cid'] = ((array)$select_result['_id'])['oid'];
         unset($select_result['_id']);
 
         // 将字典数据写入请求响应
@@ -166,42 +177,41 @@ $app->group('/mission', function (App $app) {
     });
 
 
+    // 修改单个Cookie信息
     $app->put('', function (Request $request, Response $response) {
         // 获取请求数据
-        if (isset($request->getQueryParams()['mid']) && !empty($request->getQueryParam('mid'))) {
-            $mission_id = $request->getQueryParam('mid');
+        if (isset($request->getQueryParams()['cid']) && !empty($request->getQueryParam('cid'))) {
+            $cookie_id = $request->getQueryParam('cid');
         } else {
             goto Bad_request;
         }
         try {
-            $mission_id = new MongoDB\BSON\ObjectId($mission_id);
+            $cookie_id = new MongoDB\BSON\ObjectId($cookie_id);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
             goto Bad_request;
         }
         $json_data = json_decode($request->getBody(), true);
-        $mission = $this->get('Data')['mission'];
-        foreach ($mission as $key => &$value) {
+        $cookie = $this->get('Data')['cookie'];
+        foreach ($cookie as $key => &$value) {
             if (!isset($json_data[$key]) || gettype($json_data[$key]) != gettype($value)) {
                 goto Bad_request;
             }
             $value = $json_data[$key];
         }
-        $mission['header'] = (object)$mission['header'];
-        $mission['param'] = (object)$mission['param'];
 
         // 更新MongoDB数据库
         $db = new MongoDB\Database($this->get('mongodb_client'), $this->get('MongoDB')['db']);
-        $collection = $db->selectCollection('mission');
+        $collection = $db->selectCollection('cookie');
         $update_result = $collection->updateOne(
-            ['_id' => $mission_id],
-            ['$set' => $mission]
+            ['_id' => $cookie_id],
+            ['$set' => $cookie]
         );
         if ($update_result->getModifiedCount() == 0) {
             goto Not_modified;
         } else {
             $update_result = [
-                "mid" => $request->getQueryParam('mid'),
-                "mission_modified_count" => $update_result->getModifiedCount()
+                "cid" => $request->getQueryParam('cid'),
+                "cookie_modified_count" => $update_result->getModifiedCount()
             ];
         }
 
@@ -216,34 +226,35 @@ $app->group('/mission', function (App $app) {
     });
 
 
+    // 删除单个Cookie信息
     $app->delete('', function (Request $request, Response $response) {
         // 获取请求数据
-        if (isset($request->getQueryParams()['mid']) && !empty($request->getQueryParam('mid'))) {
-            $mission_id = $request->getQueryParam('mid');
+        if (isset($request->getQueryParams()['cid']) && !empty($request->getQueryParam('cid'))) {
+            $cookie_id = $request->getQueryParam('cid');
         } else {
             goto Bad_request;
         }
         try {
-            $mission_id = new MongoDB\BSON\ObjectId($mission_id);
+            $cookie_id = new MongoDB\BSON\ObjectId($cookie_id);
         } catch (MongoDB\Driver\Exception\InvalidArgumentException $e) {
             goto Bad_request;
         }
 
         // 更新MongoDB数据库
         $db = new MongoDB\Database($this->get('mongodb_client'), $this->get('MongoDB')['db']);
-        $collection = $db->selectCollection('mission');
-        $delete_result = $collection->deleteOne(['_id' => $mission_id]);
-        if ($delete_result->getDeletedCount() == 0) {
+        $collection = $db->selectCollection('cookie');
+        $select_result = $collection->deleteOne(['_id' => $cookie_id]);
+        if ($select_result->getDeletedCount() == 0) {
             goto Not_modified;
         } else {
-            $delete_result = [
-                "mid" => $request->getQueryParam('mid'),
-                "mission_deleted_count" => $delete_result->getDeletedCount()
+            $select_result = [
+                "cid" => $request->getQueryParam('cid'),
+                "cookie_deleted_count" => $select_result->getDeletedCount()
             ];
         }
 
         // 将字典数据写入请求响应
-        $result = array_merge($delete_result, ['status' => 'success']);
+        $result = array_merge($select_result, ['status' => 'success']);
         return $response->withJson($result);
         // 异常访问出口
         Bad_request:
@@ -256,4 +267,3 @@ $app->group('/mission', function (App $app) {
     ->add(\WolfBolin\Slim\Middleware\x_auth_token())
     ->add(\WolfBolin\Slim\Middleware\maintenance_mode())
     ->add(\WolfBolin\Slim\Middleware\access_record());
-

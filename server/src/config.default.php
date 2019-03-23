@@ -2,21 +2,20 @@
 /**
  * Created by PhpStorm.
  * User: wolfbolin
- * Date: 2019/3/3
- * Time: 0:26
+ * Date: 2019/3/22
+ * Time: 16:59
  */
-//Configuration
+
 return [
+    'Version' => '',
+    'Sentry_DSN' => '',
+    'Mongo_Token' => '',
     'MongoDB' => [
         'db' => '',
-        'host' => '',
+        'host' => '',  // 192.168.40.129  192.168.80.83
         'port' => '',
         'username' => '',
         'password' => '',
         'authSource' => ''
-    ],
-    'URL' => [
-        'csu_url' => '',
-        'login_url' => ''
     ]
 ];
