@@ -37,7 +37,7 @@ require __DIR__ . '/../src/middleware.php';
 
 // 注册网络路由
 require __DIR__ . '/../src/route/info.php';
-//require __DIR__ . '/../src/route/mission.php';
+require __DIR__ . '/../src/route/mission.php';
 //require __DIR__ . '/../src/route/cookie.php';
 require __DIR__ . '/../src/route/task.php';
 

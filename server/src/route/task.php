@@ -82,12 +82,7 @@ $app->group('/task', function (App $app) {
         // 更新统计数据
         $collection = $db->selectCollection('statistic');
         $collection->updateOne(
-            ['key' => 'total_download'],
-            ['$inc' => ['value' => 1]],
-            ['upsert' => true]
-        );
-        $collection->updateOne(
-            ['key' => 'stage_download'],
+            ['key' => ['$in' => ['total_download', 'stage_download']]],
             ['$inc' => ['value' => 1]],
             ['upsert' => true]
         );

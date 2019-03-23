@@ -40,7 +40,7 @@ return [
             'user' => ''
         ]
     ],
-    'Statistic' => [
+    'Info' => [
         'status_list' => [
             'total_download' => '',
             'stage_download' => '',

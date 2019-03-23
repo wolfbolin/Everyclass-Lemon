@@ -40,8 +40,8 @@
       "status": "success",
       "mission_deleted_count": 0,
       "cookie_deleted_count": 0,
-      "receipt_deleted_count": 0,
-      "statistic_update_count": 0,
+      "task_deleted_count": 2,
+      "info_update_count": 0,
       "user_deleted_count": 0
   }
   ```
